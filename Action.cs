@@ -40,14 +40,14 @@ internal class Action
                 else if (__instance.Index == -1)
                     action = blueprintConstructionPopup.CurrentDeconstructAction;
             }
-            else if (__instance.Index > -1 && __instance.Index < currentCard.DismantleActions.Length + (popup.CurrentCard.CardModel.CannotEmpty ? -1 : 0))
+            else if (__instance.Index > -1 && __instance.Index < currentCard.DismantleActions.Length + (popup.CurrentCard.CardModel.CannotEmptyWithAnAction ? -1 : 0))
             {
                 action = currentCard.DismantleActions[__instance.Index];
             }
-            else if (popup.CurrentCard.ContainedLiquid && __instance.Index >= currentCard.DismantleActions.Length + (popup.CurrentCard.CardModel.CannotEmpty ? -1 : 0) &&
-                     __instance.Index < currentCard.DismantleActions.Length + (popup.CurrentCard.CardModel.CannotEmpty ? -1 : 0) + popup.CurrentCard.DismantleActions.Length)
+            else if (popup.CurrentCard.ContainedLiquid && __instance.Index >= currentCard.DismantleActions.Length + (popup.CurrentCard.CardModel.CannotEmptyWithAnAction ? -1 : 0) &&
+                     __instance.Index < currentCard.DismantleActions.Length + (popup.CurrentCard.CardModel.CannotEmptyWithAnAction ? -1 : 0) + popup.CurrentCard.DismantleActions.Length)
             {
-                action = popup.CurrentCard.DismantleActions[__instance.Index - (currentCard.DismantleActions.Length + (popup.CurrentCard.CardModel.CannotEmpty ? -1 : 0))];
+                action = popup.CurrentCard.DismantleActions[__instance.Index - (currentCard.DismantleActions.Length + (popup.CurrentCard.CardModel.CannotEmptyWithAnAction ? -1 : 0))];
                 currentCard = popup.CurrentCard;
             }
         }
@@ -80,7 +80,7 @@ internal class Action
                     {
                         texts.Add(FormatBasicEntry(exploreAction.ActionName, ""));
                         string dropList = FormatCardDropList(
-                            gm.GetCollectionDropsReport(exploreAction, currentCard, false), currentCard,
+                            gm.GetCollectionDropsReport(exploreAction, currentCard, null, false), currentCard,
                             action: action, indent: 2);
                         if (!string.IsNullOrWhiteSpace(dropList)) texts.Add(dropList);
                         string actionText = FormatCardAction(exploreAction, currentCard, 2);
@@ -107,7 +107,7 @@ internal class Action
             if ((dropReport.DropsInfo == null || dropReport.DropsInfo.Length == 0) &&
                 action.ProducedCards != null && action.ProducedCards.Length > 0)
             {
-                dropReport = gm.GetCollectionDropsReport(action, currentCard, true);
+                dropReport = gm.GetCollectionDropsReport(action, currentCard, null, true);
                 texts.Add(FormatCardDropList(dropReport, currentCard, action: action));
             }
 
@@ -152,7 +152,7 @@ internal class Action
             if (Plugin.HideImpossibleDropSet && report.DropsInfo.Length != 1 && dropRate < 0.00001 &&
                 (!report.DropsInfo[i].IsSuccess || report.DropsInfo[i].FinalWeight < -10000)) continue;
             string dropCardTexts = report.DropsInfo[i].Drops.Where(c => c != null).GroupBy(
-                    c => new { c.CardType, c.CardName }, c => c,
+                    c => new { c.Card.CardType, c.Card.CardName }, c => c,
                     (k, cs) => new { name = k.CardName.ToString(), count = cs.Count(), type = k.CardType })
                 .Select(r => $"{ColorFloat(r.count)} ({r.type}){r.name}").Join();
             if (action != null && action.ProducedCards != null && action.ProducedCards[0].DropsLiquid)

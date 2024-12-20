@@ -17,9 +17,9 @@ internal class Encounter
         EncounterPopup popup = __instance.GetComponentInParent<EncounterPopup>();
         if (popup == null) return;
         int actionIndex = __instance.Index;
-        if (actionIndex < 0 || actionIndex > popup.EncounterPlayerActions.Count - 1) return;
+        if (actionIndex < 0 || actionIndex > popup.GeneralPlayerActions.Length - 1) return;
         List<string> texts = new();
-        texts.Add(FormatEncounterPlayerAction(popup.EncounterPlayerActions.get_Item(actionIndex), popup, actionIndex));
+        texts.Add(FormatEncounterPlayerAction(popup.GeneralPlayerActions[actionIndex], popup, actionIndex));
 
         string newContent = texts.Join(delimiter: "\n");
         if (!string.IsNullOrWhiteSpace(newContent))

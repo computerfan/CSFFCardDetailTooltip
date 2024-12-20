@@ -29,7 +29,7 @@ namespace CSFFCardDetailTooltip
 #if MELON_LOADER
     public class Plugin : MelonMod
 #else
-    [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
+    [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
     public class Plugin : BaseUnityPlugin
 #endif
     {
@@ -135,7 +135,7 @@ namespace CSFFCardDetailTooltip
             Harmony.CreateAndPatchAll(typeof(PrefabMod));
             Harmony.CreateAndPatchAll(typeof(Encounter));
 
-            Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
+            Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
         }
 #endif
 
@@ -189,7 +189,7 @@ namespace CSFFCardDetailTooltip
                 InGameCardBase currentCard = __instance.ContainedLiquid ?? __instance;
                 if (action.ProducedCards != null)
                 {
-                    CollectionDropReport dropReport = gm.GetCollectionDropsReport(action, currentCard, true);
+                    CollectionDropReport dropReport = gm.GetCollectionDropsReport(action, currentCard, null, true);
                     texts.Add(Action.FormatCardDropList(dropReport, currentCard, action: action));
                 }
 
@@ -233,7 +233,7 @@ namespace CSFFCardDetailTooltip
                     {
                         CardOnCardAction cardOnCardAction = recipe.GetResult(cookingstatus.Card);
                         CollectionDropReport dropReport =
-                            gm.GetCollectionDropsReport(cardOnCardAction, __instance, false, false);
+                            gm.GetCollectionDropsReport(cardOnCardAction, __instance, null, true);
                         texts.Add("<size=70%>" + Action.FormatCardDropList(dropReport, __instance, indent: 2) +
                                   "</size>");
                     }

@@ -50,7 +50,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
     }
 #endif
 
-    public static string FormatEncounterPlayerAction(EncounterPlayerAction action, EncounterPopup popup,
+    public static string FormatEncounterPlayerAction(GenericEncounterPlayerAction action, EncounterPopup popup,
         int actionIndex)
     {
         MeleeClashResultsReport backupCurrentRoundMeleeClashResult = popup.CurrentRoundMeleeClashResult;
@@ -74,8 +74,8 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         summary.AppendLine($"{LcStr("CSFFDetailedCardProgress.Encounter.PlayerAction", "Player Action")}: {action.ActionName}");
         if (action.ActionRange == ActionRange.Melee)
         {
-            float playerSuccess = currentRoundMeleeClashResult.PlayerPercentChance;
-            float enemySuccess = currentRoundMeleeClashResult.EnemyPercentChance;
+            float playerSuccess = currentRoundMeleeClashResult.PlayerSuccessChance;
+            float enemySuccess = currentRoundMeleeClashResult.EnemySuccessChance;
             summary.AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.PowerComparison", "Power Comparison")}: {currentRoundMeleeClashResult.CommonClashReport.PlayerClashValue:0.#} : {currentRoundMeleeClashResult.CommonClashReport.EnemyClashValue:0.#}");
             summary.AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.PlayerAttackHitRate", "Player Attack Hit Rate")}: {playerSuccess * 100f:0.##}%{(commonClashResult.PlayerCannotFail ? $" <color=green>({LcStr("CSFFDetailedCardProgress.Encounter.GuaranteedHit", "Guaranteed Hit")})</color>" : "")}");
             summary.AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.EnemyAttackHitRate", "Enemy Attack Hit Rate")}: {enemySuccess * 100f:0.##}%{(commonClashResult.EnemyCannotFail ? $" <color=red>({LcStr("CSFFDetailedCardProgress.Encounter.GuaranteedHit", "Guaranteed Hit")})</color>" : "")}");
@@ -84,7 +84,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
                     summary.AppendLine($"  {stat.Stat.GameName.ToString()}: {FormatMinMaxValue(stat.GenerateRandomRange())}");
             if (!action.DoesNotAttack)
             {
-                Vector2 damage = action.Damage;
+                Vector2 damage = action.InitialDamage;
                 Vector2 damageStatSum = action.DamageStatSum;
                 Vector2 sizeDamage = new(popup.PlayerSize, popup.PlayerSize);
 
@@ -105,7 +105,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
                         $"{FormatPlayerHitResult(encounter, action, popup, damage + damageStatSum + sizeDamage)}");
             }
 
-            summary.AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.DistanceChange", "Distance Change")}: {GetDistanceChangeText(action.DistanceChange)}");
+            summary.AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.DistanceChange", "Distance Change")}: {GetDistanceChangeText(action.PreClashDistanceChange)}");
         }
         else if (action.ActionRange == ActionRange.Ranged)
         {
@@ -125,14 +125,14 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
                 summary.AppendLine(
                     $" {LcStr("CSFFDetailedCardProgress.Encounter.PowerComparison", "Power Comparison")}: {currentRoundMeleeClashResult.CommonClashReport.PlayerClashValue:0.#} : {currentRoundMeleeClashResult.CommonClashReport.EnemyClashValue:0.#}");
 
-                float playerSuccess = currentRoundMeleeClashResult.PlayerPercentChance;
-                float enemySuccess = currentRoundMeleeClashResult.EnemyPercentChance;
+                float playerSuccess = currentRoundMeleeClashResult.PlayerSuccessChance;
+                float enemySuccess = currentRoundMeleeClashResult.EnemySuccessChance;
 
                 summary.AppendLine($"{LcStr("CSFFDetailedCardProgress.Encounter.PlayerHitRate", "Player Hit Rate")}: {playerSuccess * 100f:0.##}%");
                 summary.AppendLine($"{LcStr("CSFFDetailedCardProgress.Encounter.EnemyHitRate", "Enemy Hit Rate")}: {enemySuccess * 100f:0.##}%");
             }
 
-            Vector2 damage = action.Damage;
+            Vector2 damage = action.InitialDamage;
             Vector2 damageStatSum = action.DamageStatSum;
             if (!action.DoesNotAttack)
             {
@@ -149,7 +149,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
                     .AppendLine($"{FormatPlayerHitResult(encounter, action, popup, damage + damageStatSum)}");
             }
 
-            summary.AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.DistanceChange", "Distance Change")}: {GetDistanceChangeText(action.DistanceChange)}");
+            summary.AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.DistanceChange", "Distance Change")}: {GetDistanceChangeText(action.PreClashDistanceChange)}");
         }
 
         summary.AppendLine($"{LcStr("CSFFDetailedCardProgress.Encounter.CurrentEnemyStatus", "Current Enemy Status")}:")
@@ -222,7 +222,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         };
     }
 
-    public static string FormatPlayerHitResult(InGameEncounter encounter, EncounterPlayerAction action,
+    public static string FormatPlayerHitResult(InGameEncounter encounter, GenericEncounterPlayerAction action,
         EncounterPopup popup, Vector2 playerActionDamage, int indent = 2)
     {
         bool flag = action.ActionRange == ActionRange.Melee;
@@ -356,7 +356,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         return result.ToString();
     }
 
-    public static string FormatPlayerClashValue(InGameEncounter encounter, EncounterPlayerAction action,
+    public static string FormatPlayerClashValue(InGameEncounter encounter, GenericEncounterPlayerAction action,
         EncounterPopup popup, int indent = 1)
     {
         bool _WithRandomness = false;
@@ -397,7 +397,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         if (action.ActionRange == ActionRange.Ranged)
         {
             result.AppendLine($"{spaces}{LcStr("CSFFDetailedCardProgress.Encounter.EnemySizeMalus", "Enemy Size Malus")}: {ColorFloat(-encounter.CurrentEnemySize)}");
-            result.AppendLine($"{spaces}{LcStr("CSFFDetailedCardProgress.Encounter.InaccuracyMalus", "Inaccuracy Malus")}: {ColorFloat(-action.ClashInaccuracy.y)}");
+            result.AppendLine($"{spaces}{LcStr("CSFFDetailedCardProgress.Encounter.InaccuracyMalus", "Inaccuracy Malus")}: {ColorFloat(-action.ClashRangedInaccuracy.y)}");
             result.AppendLine($"{spaces}{LcStr("CSFFDetailedCardProgress.Encounter.EnemyCoverMalus", "Enemy Cover Malus")}: {ColorFloat(-encounter.CurrentEnemyCover)}");
         }
 
@@ -699,7 +699,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
                 for (int i = 0; i < gm.CurrentActionModifiers.Count; i++)
                 {
                     var cur = gm.CurrentActionModifiers.get_Item(i);
-                    if (cur.AppliesToAction(action, gm.NotInBase, fromCard) && cur.DurationModifier != 0)
+                    if (cur.AppliesToAction(action, gm.NotInBase, fromCard, null) && cur.DurationModifier != 0)
                     {
                         texts.Add(FormatBasicEntry($"{ColorFloat(cur.DurationModifier)}", $"{cur.Source}", indent: indent + 2));
                     }
@@ -955,8 +955,8 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
                 { LocalizationKey = "CSFFDetailedCardProgress.statOnFullTitle", DefaultText = "On Full" }
                     .ToString(), "", indent: 4);
                 CollectionDropReport collectionDropsReport =
-                    GameManager.Instance.GetCollectionDropsReport(stat.OnFull, currentCard, false);
-                dropList = System.Action.FormatCardDropList(
+                    GameManager.Instance.GetCollectionDropsReport(stat.OnFull, currentCard, null, false);
+                dropList = Action.FormatCardDropList(
                     collectionDropsReport, currentCard,
                     action: stat.OnFull, indent: 6);
                 statOnFullZeroText = FormatCardAction(stat.OnFull, currentCard, 6);
@@ -976,9 +976,9 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
                 bool uniqueOnBoard = currentCard.CardModel.UniqueOnBoard;
                 if (currentCard.CardModel.CardType == CardTypes.Weather) currentCard.CardModel.UniqueOnBoard = false;
                 CollectionDropReport collectionDropsReport =
-                    GameManager.Instance.GetCollectionDropsReport(stat.OnZero, currentCard, false);
+                    GameManager.Instance.GetCollectionDropsReport(stat.OnZero, currentCard, null, false);
                 currentCard.CardModel.UniqueOnBoard = uniqueOnBoard;
-                dropList = System.Action.FormatCardDropList(
+                dropList = Action.FormatCardDropList(
                     collectionDropsReport, currentCard,
                     action: stat.OnZero, indent: 6);
                 statOnFullZeroText = FormatCardAction(stat.OnZero, currentCard, 6);

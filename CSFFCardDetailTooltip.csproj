@@ -9,14 +9,14 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <PackageId>space.cfan.CSFFCardDetailTooltip</PackageId>
-		<Authors>computerfan</Authors>
-		<Copyright>MIT License Copyright © 2024 $(Authors)</Copyright>
+    <Authors>computerfan</Authors>
+    <Copyright>MIT License Copyright © 2024 $(Authors)</Copyright>
     <GameAssemblyPath Condition="'$(GameAssemblyPath)' == ''">Assembly\Game\Win</GameAssemblyPath>
-		<GameAssemblyPath Condition="'$(GameAssemblyPath)' != '' and ('$(Configuration)'=='Release-MelonLoader' or '$(Configuration)'=='Debug-MelonLoader')">android\managed</GameAssemblyPath>
-		<MelonLoaderAssemblyPath Condition="'$(MelonLoaderAssemblyPath)' == ''">..\MelonLoader</MelonLoaderAssemblyPath>
-		<AssemblyUnhollowerAssemblyPath Condition="'$(AssemblyUnhollowerAssemblyPath)' == ''">..\AssemblyUnhollower</AssemblyUnhollowerAssemblyPath>
-		<DebugType>Full</DebugType>
-		<Configurations>Debug;Release;Release-MelonLoader;Debug-MelonLoader</Configurations>
+    <GameAssemblyPath Condition="'$(GameAssemblyPath)' != '' and ('$(Configuration)'=='Release-MelonLoader' or '$(Configuration)'=='Debug-MelonLoader')">android\managed</GameAssemblyPath>
+    <MelonLoaderAssemblyPath Condition="'$(MelonLoaderAssemblyPath)' == ''">..\MelonLoader</MelonLoaderAssemblyPath>
+    <AssemblyUnhollowerAssemblyPath Condition="'$(AssemblyUnhollowerAssemblyPath)' == ''">..\AssemblyUnhollower</AssemblyUnhollowerAssemblyPath>
+    <DebugType>Full</DebugType>
+    <Configurations>Debug;Release;Release-MelonLoader;Debug-MelonLoader</Configurations>
     <RestoreAdditionalProjectSources>
       https://api.nuget.org/v3/index.json;
       https://nuget.bepinex.dev/v3/index.json;
@@ -26,24 +26,24 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MelonLoader|AnyCPU'">
-		<DefineConstants>TRACE;MELON_LOADER</DefineConstants>
-		<Optimize>True</Optimize>
-	</PropertyGroup>
+        <DefineConstants>TRACE;MELON_LOADER</DefineConstants>
+        <Optimize>True</Optimize>
+    </PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MelonLoader|AnyCPU'">
-	  <DefineConstants>TRACE;MELON_LOADER</DefineConstants>
-	  <Optimize>false</Optimize>
-	</PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MelonLoader|AnyCPU'">
+      <DefineConstants>TRACE;MELON_LOADER</DefineConstants>
+      <Optimize>false</Optimize>
+    </PropertyGroup>
 
-	<ItemGroup>
-	  <Compile Remove="android\**" />
-	  <EmbeddedResource Remove="android\**" />
-	  <None Remove="android\**" />
-	</ItemGroup>
+    <ItemGroup>
+      <Compile Remove="android\**" />
+      <EmbeddedResource Remove="android\**" />
+      <None Remove="android\**" />
+    </ItemGroup>
 
-	<ItemGroup>
-		<EmbeddedResource Include="locale\简体中文.csv" />
-	</ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Include="locale\简体中文.csv" />
+    </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
@@ -52,7 +52,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="BepInEx.Core" Version="5.*" />
-    <PackageReference Include="BepInEx.PluginInfoProps" Version="2.*" />
+    <PackageReference Include="BepInEx.PluginInfoProps" Version="2.1.0" />
     <PackageReference Include="UnityEngine.Modules" Version="2019.4.38" IncludeAssets="compile" />
   </ItemGroup>
   
@@ -61,80 +61,80 @@
   </ItemGroup>
 
   <ItemGroup>
-		<Reference Include="Assembly-CSharp">
-			<HintPath>$(GameAssemblyPath)\Assembly-CSharp.dll</HintPath>
-			<Publicize Condition="'$(Configuration)'!='Release-MelonLoader' and '$(Configuration)'!='Debug-MelonLoader'">true</Publicize>
-		</Reference>
-		<Reference Include="Unity.TextMeshPro">
-			<HintPath>$(GameAssemblyPath)\Unity.TextMeshPro.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine">
-			<HintPath>$(GameAssemblyPath)\UnityEngine.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.AssetBundleModule">
-			<HintPath>$(GameAssemblyPath)\UnityEngine.AssetBundleModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.CoreModule">
-			<HintPath>$(GameAssemblyPath)\UnityEngine.CoreModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.TextRenderingModule">
-			<HintPath>$(GameAssemblyPath)\UnityEngine.TextRenderingModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.UI">
-			<HintPath>$(GameAssemblyPath)\UnityEngine.UI.dll</HintPath>
-		</Reference>
-	</ItemGroup>
-	<ItemGroup Condition="'$(Configuration)'=='Release-MelonLoader' or '$(Configuration)'=='Debug-MelonLoader'">
-		<Reference Include="MelonLoader">
-			<HintPath>$(MelonLoaderAssemblyPath)\MelonLoader.dll</HintPath>
-		</Reference>
-		<Reference Include="AssemblyUnhollower">
-			<HintPath>$(AssemblyUnhollowerAssemblyPath)\AssemblyUnhollower.dll</HintPath>
-		</Reference>
-		<Reference Include="Iced">
-			<HintPath>$(AssemblyUnhollowerAssemblyPath)\Iced.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppMono.Security">
-			<HintPath>$(GameAssemblyPath)\Il2CppMono.Security.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2Cppmscorlib">
-			<HintPath>$(GameAssemblyPath)\Il2Cppmscorlib.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppSystem">
-			<HintPath>$(GameAssemblyPath)\Il2CppSystem.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppSystem.Configuration">
-			<HintPath>$(GameAssemblyPath)\Il2CppSystem.Configuration.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppSystem.Core">
-			<HintPath>$(GameAssemblyPath)\Il2CppSystem.Core.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppSystem.Diagnostics.StackTrace">
-			<HintPath>$(GameAssemblyPath)\Il2CppSystem.Diagnostics.StackTrace.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppSystem.Globalization.Extensions">
-			<HintPath>$(GameAssemblyPath)\Il2CppSystem.Globalization.Extensions.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppSystem.Xml">
-			<HintPath>$(GameAssemblyPath)\Il2CppSystem.Xml.dll</HintPath>
-		</Reference>
-		<Reference Include="Mono.Cecil">
-			<HintPath>$(AssemblyUnhollowerAssemblyPath)\Mono.Cecil.dll</HintPath>
-		</Reference>
-		<Reference Include="Mono.Cecil.Mdb">
-			<HintPath>$(AssemblyUnhollowerAssemblyPath)\Mono.Cecil.Mdb.dll</HintPath>
-		</Reference>
-		<Reference Include="Mono.Cecil.Pdb">
-			<HintPath>$(AssemblyUnhollowerAssemblyPath)\Mono.Cecil.Pdb.dll</HintPath>
-		</Reference>
-		<Reference Include="Mono.Cecil.Rocks">
-			<HintPath>$(AssemblyUnhollowerAssemblyPath)\Mono.Cecil.Rocks.dll</HintPath>
-		</Reference>
-		<Reference Include="UnhollowerBaseLib">
-			<HintPath>$(AssemblyUnhollowerAssemblyPath)\UnhollowerBaseLib.dll</HintPath>
-		</Reference>
-		<Reference Include="UnhollowerRuntimeLib">
-			<HintPath>$(AssemblyUnhollowerAssemblyPath)\UnhollowerRuntimeLib.dll</HintPath>
-		</Reference>
-	</ItemGroup>
+        <Reference Include="Assembly-CSharp">
+            <HintPath>$(GameAssemblyPath)\Assembly-CSharp.dll</HintPath>
+            <Publicize Condition="'$(Configuration)'!='Release-MelonLoader' and '$(Configuration)'!='Debug-MelonLoader'">true</Publicize>
+        </Reference>
+        <Reference Include="Unity.TextMeshPro">
+            <HintPath>$(GameAssemblyPath)\Unity.TextMeshPro.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine">
+            <HintPath>$(GameAssemblyPath)\UnityEngine.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.AssetBundleModule">
+            <HintPath>$(GameAssemblyPath)\UnityEngine.AssetBundleModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.CoreModule">
+            <HintPath>$(GameAssemblyPath)\UnityEngine.CoreModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.TextRenderingModule">
+            <HintPath>$(GameAssemblyPath)\UnityEngine.TextRenderingModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.UI">
+            <HintPath>$(GameAssemblyPath)\UnityEngine.UI.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+    <ItemGroup Condition="'$(Configuration)'=='Release-MelonLoader' or '$(Configuration)'=='Debug-MelonLoader'">
+        <Reference Include="MelonLoader">
+            <HintPath>$(MelonLoaderAssemblyPath)\MelonLoader.dll</HintPath>
+        </Reference>
+        <Reference Include="AssemblyUnhollower">
+            <HintPath>$(AssemblyUnhollowerAssemblyPath)\AssemblyUnhollower.dll</HintPath>
+        </Reference>
+        <Reference Include="Iced">
+            <HintPath>$(AssemblyUnhollowerAssemblyPath)\Iced.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppMono.Security">
+            <HintPath>$(GameAssemblyPath)\Il2CppMono.Security.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2Cppmscorlib">
+            <HintPath>$(GameAssemblyPath)\Il2Cppmscorlib.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppSystem">
+            <HintPath>$(GameAssemblyPath)\Il2CppSystem.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppSystem.Configuration">
+            <HintPath>$(GameAssemblyPath)\Il2CppSystem.Configuration.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppSystem.Core">
+            <HintPath>$(GameAssemblyPath)\Il2CppSystem.Core.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppSystem.Diagnostics.StackTrace">
+            <HintPath>$(GameAssemblyPath)\Il2CppSystem.Diagnostics.StackTrace.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppSystem.Globalization.Extensions">
+            <HintPath>$(GameAssemblyPath)\Il2CppSystem.Globalization.Extensions.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppSystem.Xml">
+            <HintPath>$(GameAssemblyPath)\Il2CppSystem.Xml.dll</HintPath>
+        </Reference>
+        <Reference Include="Mono.Cecil">
+            <HintPath>$(AssemblyUnhollowerAssemblyPath)\Mono.Cecil.dll</HintPath>
+        </Reference>
+        <Reference Include="Mono.Cecil.Mdb">
+            <HintPath>$(AssemblyUnhollowerAssemblyPath)\Mono.Cecil.Mdb.dll</HintPath>
+        </Reference>
+        <Reference Include="Mono.Cecil.Pdb">
+            <HintPath>$(AssemblyUnhollowerAssemblyPath)\Mono.Cecil.Pdb.dll</HintPath>
+        </Reference>
+        <Reference Include="Mono.Cecil.Rocks">
+            <HintPath>$(AssemblyUnhollowerAssemblyPath)\Mono.Cecil.Rocks.dll</HintPath>
+        </Reference>
+        <Reference Include="UnhollowerBaseLib">
+            <HintPath>$(AssemblyUnhollowerAssemblyPath)\UnhollowerBaseLib.dll</HintPath>
+        </Reference>
+        <Reference Include="UnhollowerRuntimeLib">
+            <HintPath>$(AssemblyUnhollowerAssemblyPath)\UnhollowerRuntimeLib.dll</HintPath>
+        </Reference>
+    </ItemGroup>
 </Project>
