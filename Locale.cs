@@ -23,7 +23,7 @@ internal class Locale
             LocalizationManager.CurrentLanguage >= __instance.Languages.Length) return;
         LanguageSetting langSetting = __instance.Languages[LocalizationManager.CurrentLanguage];
         using Stream stream = Assembly.GetExecutingAssembly()
-            .GetManifestResourceStream($"CstiDetailedCardProgress.locale.{langSetting.LanguageName}.csv");
+            .GetManifestResourceStream($"CSFFCardDetailTooltip.locale.{langSetting.LanguageName}.csv");
         if (stream == null || !stream.CanRead) return;
         using StreamReader reader = new StreamReader(stream);
         string localizationString = reader.ReadToEnd();

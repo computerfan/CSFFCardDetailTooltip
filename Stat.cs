@@ -46,7 +46,7 @@ internal class Stat
         List<string> rateModsTexts = new();
         if (stat.CurrentBaseValue != 0)
             valueModsTexts.Add(FormatBasicEntry($"{stat.CurrentBaseValue:0.##}",
-                new LocalizedString { LocalizationKey = "CstiDetailedCardProgress.Stat.Base", DefaultText = "Base" }.ToString(),
+                new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Stat.Base", DefaultText = "Base" }.ToString(),
                 indent: 2));
         GameManager gm = MBSingleton<GameManager>.Instance;
         // Seems deplicated with some sources in stat.ModifierSources
@@ -57,7 +57,7 @@ internal class Stat
         //}
         if (stat.CurrentBaseRate != 0)
             rateModsTexts.Add(FormatRateEntry(stat.CurrentBaseRate,
-                new LocalizedString { LocalizationKey = "CstiDetailedCardProgress.Stat.Base", DefaultText = "Base" }.ToString()));
+                new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Stat.Base", DefaultText = "Base" }.ToString()));
         foreach (StatModifierSource modifierSource in stat.ModifierSources)
             if (modifierSource.ValidNumbers && modifierSource.ValidSource)
             {
@@ -81,7 +81,7 @@ internal class Stat
                 if (status?.EffectsOnActions == null || status.EffectsOnActions.Length == 0) continue;
                 texts.Add(FormatBasicEntry(new LocalizedString()
                 {
-                    LocalizationKey = "CstiDetailedCardProgress.TimeCostModifiers",
+                    LocalizationKey = "CSFFCardDetailTooltip.TimeCostModifiers",
                     DefaultText = "Time Cost Modifiers"
                 }, ""));
                 foreach (var effect in status.EffectsOnActions)
@@ -108,7 +108,7 @@ internal class Stat
                 texts.Add(FormatBasicEntry(
                     new LocalizedString
                     {
-                        LocalizationKey = "CstiDetailedCardProgress.Stat.ActionStaleness",
+                        LocalizationKey = "CSFFCardDetailTooltip.Stat.ActionStaleness",
                         DefaultText = "Action Staleness"
                     }, $"(×{1 / stat.StatModel.StalenessMultiplier:0.##}/{stat.StatModel.NoveltyCooldownDuration}t)"));
                 texts.Add(stalenessText.Join(delimiter: "\n"));
@@ -131,7 +131,7 @@ internal class Stat
             sourceName = modifierSource.Perk.PerkName;
         else if (modifierSource.TimeOfDay != null)
             sourceName =
-                $"{new LocalizedString { LocalizationKey = "CstiDetailedCardProgress.Stat.Time", DefaultText = "Time" }.ToString()} {modifierSource.TimeOfDay.EffectStartingTime}~{modifierSource.TimeOfDay.EffectEndTime}";
+                $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Stat.Time", DefaultText = "Time" }.ToString()} {modifierSource.TimeOfDay.EffectStartingTime}~{modifierSource.TimeOfDay.EffectEndTime}";
         return sourceName;
     }
 }

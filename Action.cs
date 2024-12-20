@@ -62,13 +62,13 @@ internal class Action
                     texts.Add(FormatBasicEntry($"{currentCard.ExplorationData.CurrentExploration:P2}",
                         new LocalizedString
                         {
-                            LocalizationKey = "CstiDetailedCardProgress.Action.CurrentExploration",
+                            LocalizationKey = "CSFFCardDetailTooltip.Action.CurrentExploration",
                             DefaultText = "Current Exploration"
                         }));
                 texts.Add(FormatBasicEntry(ColorFloat(action.ExplorationValue, true),
                     new LocalizedString
                     {
-                        LocalizationKey = "CstiDetailedCardProgress.Action.ExplorationValue",
+                        LocalizationKey = "CSFFCardDetailTooltip.Action.ExplorationValue",
                         DefaultText = "Explored"
                     }));
                 currentCard.CardModel?.ExplorationResults?
@@ -89,7 +89,7 @@ internal class Action
                 texts.Add(FormatBasicEntry(FormatMinMaxValue(action.MinMaxExplorationDrops),
                     new LocalizedString
                     {
-                        LocalizationKey = "CstiDetailedCardProgress.Action.ExplorationDropsCount",
+                        LocalizationKey = "CSFFCardDetailTooltip.Action.ExplorationDropsCount",
                         DefaultText = "Exploration Drops Count"
                     }));
             }
@@ -169,23 +169,23 @@ internal class Action
             {
                 if (string.IsNullOrWhiteSpace(dropCardTexts)) return "";
                 return FormatBasicEntry(
-                    $"{new LocalizedString { LocalizationKey = "CstiDetailedCardProgress.Action.CardDrops", DefaultText = "Card Drops" }.ToString()}",
+                    $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Action.CardDrops", DefaultText = "Card Drops" }.ToString()}",
                     dropCardTexts, indent: indent);
             }
 
             texts.Add(FormatBasicEntry($"{dropRate:P2}", $"{report.DropsInfo[i].CollectionName}", indent: indent));
             if (!string.IsNullOrWhiteSpace(dropCardTexts))
                 texts.Add(FormatBasicEntry(
-                    $"<size=55%>{new LocalizedString { LocalizationKey = "CstiDetailedCardProgress.Action.CardDrops", DefaultText = "Card Drops" }.ToString()}</size>",
+                    $"<size=55%>{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Action.CardDrops", DefaultText = "Card Drops" }.ToString()}</size>",
                     "<size=55%>" + dropCardTexts + "</size>", indent: 2 + indent));
             texts.Add(FormatBasicEntry($"{report.DropsInfo[i].FinalWeight}/{report.TotalValue}",
                 new LocalizedString
-                { LocalizationKey = "CstiDetailedCardProgress.Action.Weight", DefaultText = "Weight" }.ToString(),
+                { LocalizationKey = "CSFFCardDetailTooltip.Action.Weight", DefaultText = "Weight" }.ToString(),
                 indent: 2 + indent));
             if (report.DropsInfo[i].BaseWeight != 0)
                 texts.Add(FormatTooltipEntry(report.DropsInfo[i].BaseWeight,
                     new LocalizedString
-                    { LocalizationKey = "CstiDetailedCardProgress.Action.Base", DefaultText = "Base" }.ToString(),
+                    { LocalizationKey = "CSFFCardDetailTooltip.Action.Base", DefaultText = "Base" }.ToString(),
                     4 + indent));
             if (withStat && report.DropsInfo[i].StatWeightMods != null)
                 foreach (StatDropWeightModReport statmod in report.DropsInfo[i].StatWeightMods)
@@ -241,7 +241,7 @@ internal class Action
                     texts.Add(FormatBasicEntry(
                         new LocalizedString
                         {
-                            LocalizationKey = "CstiDetailedCardProgress.StatModifier",
+                            LocalizationKey = "CSFFCardDetailTooltip.StatModifier",
                             DefaultText = "Stat Modifier"
                         }, "", indent: 2 + indent));
                     texts.Add(stateModTexts.Join(delimiter: "\n"));

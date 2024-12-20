@@ -47,7 +47,7 @@ internal class Encounter
             __instance.AddToLog(new EncounterLogMessage
             {
                 LogText = new LocalizedString
-                    { LocalizationKey = "CstiDetailedCardProgress.Encounter.PossibleWoundsHint", DefaultText = "If I am hit by an enemy, I might get hurt: (on average)" }
+                    { LocalizationKey = "CSFFCardDetailTooltip.Encounter.PossibleWoundsHint", DefaultText = "If I am hit by an enemy, I might get hurt: (on average)" }
             });
             __instance.AddToLog(new EncounterLogMessage
             {
@@ -60,7 +60,7 @@ internal class Encounter
             __instance.AddToLog(new EncounterLogMessage
             {
                 LogText = new LocalizedString
-                    { LocalizationKey = "CstiDetailedCardProgress.Encounter.ImpossibleWoundsHint", DefaultText = "I am confident it can't hurt me! (on average)" }
+                    { LocalizationKey = "CSFFCardDetailTooltip.Encounter.ImpossibleWoundsHint", DefaultText = "I am confident it can't hurt me! (on average)" }
             });
         }
     }
@@ -74,9 +74,9 @@ internal class Encounter
         {
             return s switch
             {
-                WoundSeverity.Minor => $"{LcStr("CstiDetailedCardProgress.Encounter.DamageThisRound", "This Round's Damage")}: {LcStr("CstiDetailedCardProgress.Encounter.Minor", "Minor")}",
-                WoundSeverity.Medium => $"{LcStr("CstiDetailedCardProgress.Encounter.DamageThisRound", "This Round's Damage")}: {LcStr("CstiDetailedCardProgress.Encounter.Medium", "Medium")}",
-                WoundSeverity.Serious => $"{LcStr("CstiDetailedCardProgress.Encounter.DamageThisRound", "This Round's Damage")}: {LcStr("CstiDetailedCardProgress.Encounter.Serious", "Serious")}",
+                WoundSeverity.Minor => $"{LcStr("CSFFCardDetailTooltip.Encounter.DamageThisRound", "This Round's Damage")}: {LcStr("CSFFCardDetailTooltip.Encounter.Minor", "Minor")}",
+                WoundSeverity.Medium => $"{LcStr("CSFFCardDetailTooltip.Encounter.DamageThisRound", "This Round's Damage")}: {LcStr("CSFFCardDetailTooltip.Encounter.Medium", "Medium")}",
+                WoundSeverity.Serious => $"{LcStr("CSFFCardDetailTooltip.Encounter.DamageThisRound", "This Round's Damage")}: {LcStr("CSFFCardDetailTooltip.Encounter.Serious", "Serious")}",
                 _ => ""
             };
         }
