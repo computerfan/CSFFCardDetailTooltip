@@ -5,7 +5,7 @@ using System.Text;
 using HarmonyLib;
 using UnityEngine;
 
-namespace CstiDetailedCardProgress;
+namespace CSFFCardDetailTooltip;
 
 public static class Utils
 {
@@ -70,15 +70,15 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
 
         InGameEncounter encounter = popup.CurrentEncounter;
 
-        StringBuilder summary = new($"<size=85%><color=yellow>{LcStr("CstiDetailedCardProgress.Encounter.ActionPreview", "Action Preview")} {encounter.EnemyName}</color></size>\n");
-        summary.AppendLine($"{LcStr("CstiDetailedCardProgress.Encounter.PlayerAction", "Player Action")}: {action.ActionName}");
+        StringBuilder summary = new($"<size=85%><color=yellow>{LcStr("CSFFDetailedCardProgress.Encounter.ActionPreview", "Action Preview")} {encounter.EnemyName}</color></size>\n");
+        summary.AppendLine($"{LcStr("CSFFDetailedCardProgress.Encounter.PlayerAction", "Player Action")}: {action.ActionName}");
         if (action.ActionRange == ActionRange.Melee)
         {
             float playerSuccess = currentRoundMeleeClashResult.PlayerPercentChance;
             float enemySuccess = currentRoundMeleeClashResult.EnemyPercentChance;
-            summary.AppendLine($" {LcStr("CstiDetailedCardProgress.Encounter.PowerComparison", "Power Comparison")}: {currentRoundMeleeClashResult.CommonClashReport.PlayerClashValue:0.#} : {currentRoundMeleeClashResult.CommonClashReport.EnemyClashValue:0.#}");
-            summary.AppendLine($" {LcStr("CstiDetailedCardProgress.Encounter.PlayerAttackHitRate", "Player Attack Hit Rate")}: {playerSuccess * 100f:0.##}%{(commonClashResult.PlayerCannotFail ? $" <color=green>({LcStr("CstiDetailedCardProgress.Encounter.GuaranteedHit", "Guaranteed Hit")})</color>" : "")}");
-            summary.AppendLine($" {LcStr("CstiDetailedCardProgress.Encounter.EnemyAttackHitRate", "Enemy Attack Hit Rate")}: {enemySuccess * 100f:0.##}%{(commonClashResult.EnemyCannotFail ? $" <color=red>({LcStr("CstiDetailedCardProgress.Encounter.GuaranteedHit", "Guaranteed Hit")})</color>" : "")}");
+            summary.AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.PowerComparison", "Power Comparison")}: {currentRoundMeleeClashResult.CommonClashReport.PlayerClashValue:0.#} : {currentRoundMeleeClashResult.CommonClashReport.EnemyClashValue:0.#}");
+            summary.AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.PlayerAttackHitRate", "Player Attack Hit Rate")}: {playerSuccess * 100f:0.##}%{(commonClashResult.PlayerCannotFail ? $" <color=green>({LcStr("CSFFDetailedCardProgress.Encounter.GuaranteedHit", "Guaranteed Hit")})</color>" : "")}");
+            summary.AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.EnemyAttackHitRate", "Enemy Attack Hit Rate")}: {enemySuccess * 100f:0.##}%{(commonClashResult.EnemyCannotFail ? $" <color=red>({LcStr("CSFFDetailedCardProgress.Encounter.GuaranteedHit", "Guaranteed Hit")})</color>" : "")}");
             if (action.AssociatedCard)
                 foreach (PlayerEncounterVariable stat in action.AssociatedCard.CardModel.WeaponClashStatInfluences)
                     summary.AppendLine($"  {stat.Stat.GameName.ToString()}: {FormatMinMaxValue(stat.GenerateRandomRange())}");
@@ -88,79 +88,79 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
                 Vector2 damageStatSum = action.DamageStatSum;
                 Vector2 sizeDamage = new(popup.PlayerSize, popup.PlayerSize);
 
-                summary.AppendLine($" {LcStr("CstiDetailedCardProgress.Encounter.DamagePower", "Damage Power")}: {FormatMinMaxValue(damage)}");
-                summary.AppendLine($" {LcStr("CstiDetailedCardProgress.Encounter.StatusDamageBonus", "Status Damage Bonus")}: {FormatMinMaxValue(damageStatSum)}");
+                summary.AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.DamagePower", "Damage Power")}: {FormatMinMaxValue(damage)}");
+                summary.AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.StatusDamageBonus", "Status Damage Bonus")}: {FormatMinMaxValue(damageStatSum)}");
                 if (action.AssociatedCard)
                     foreach (PlayerEncounterVariable stat in action.AssociatedCard.CardModel.WeaponDamageStatInfluences)
                         summary.AppendLine($"  {stat.Stat.GameName.ToString()}: {FormatMinMaxValue(stat.GenerateRandomRange())}");
-                summary.AppendLine($" {LcStr("CstiDetailedCardProgress.Encounter.MeleeSizeDamageBonus", "Melee Size Damage Bonus")}: {ColorFloat(popup.PlayerSize)}");
-                summary.AppendLine($" {LcStr("CstiDetailedCardProgress.Encounter.DamageType", "Damage Type")}: {action.DamageTypes.Select(t => t.Name.ToString()).Join()}");
+                summary.AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.MeleeSizeDamageBonus", "Melee Size Damage Bonus")}: {ColorFloat(popup.PlayerSize)}");
+                summary.AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.DamageType", "Damage Type")}: {action.DamageTypes.Select(t => t.Name.ToString()).Join()}");
                 EncounterPlayerDamageReport damageReport = new()
                 {
                     SizeDefense = encounter.CurrentEnemySize
                 };
 
-                summary.AppendLine($" {LcStr("CstiDetailedCardProgress.Encounter.HitableParts", "Hitable Parts")}:")
+                summary.AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.HitableParts", "Hitable Parts")}:")
                     .AppendLine(
                         $"{FormatPlayerHitResult(encounter, action, popup, damage + damageStatSum + sizeDamage)}");
             }
 
-            summary.AppendLine($" {LcStr("CstiDetailedCardProgress.Encounter.DistanceChange", "Distance Change")}: {GetDistanceChangeText(action.DistanceChange)}");
+            summary.AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.DistanceChange", "Distance Change")}: {GetDistanceChangeText(action.DistanceChange)}");
         }
         else if (action.ActionRange == ActionRange.Ranged)
         {
             if (encounter.Distant)
             {
                 summary.AppendLine(
-                    $" {LcStr("CstiDetailedCardProgress.Encounter.PowerComparison", "Power Comparison")}: {currentRoundRangedClashResult.PlayerClashValue:0.#} : {currentRoundRangedClashResult.EnemyClashValue:0.#}");
+                    $" {LcStr("CSFFDetailedCardProgress.Encounter.PowerComparison", "Power Comparison")}: {currentRoundRangedClashResult.PlayerClashValue:0.#} : {currentRoundRangedClashResult.EnemyClashValue:0.#}");
 
                 float playerSuccess = currentRoundRangedClashResult.PlayerSuccessChance;
                 float enemySuccess = currentRoundRangedClashResult.EnemySuccessChance;
                 // Debug.Log($"Inaccuracy: {action.ClashInaccuracy}");
-                summary.AppendLine($"{LcStr("CstiDetailedCardProgress.Encounter.PlayerHitRate", "Player Hit Rate")}: {playerSuccess * 100f:0.##}%");
-                summary.AppendLine($"{LcStr("CstiDetailedCardProgress.Encounter.EnemyHitRate", "Enemy Hit Rate")}: {enemySuccess * 100f:0.##}%");
+                summary.AppendLine($"{LcStr("CSFFDetailedCardProgress.Encounter.PlayerHitRate", "Player Hit Rate")}: {playerSuccess * 100f:0.##}%");
+                summary.AppendLine($"{LcStr("CSFFDetailedCardProgress.Encounter.EnemyHitRate", "Enemy Hit Rate")}: {enemySuccess * 100f:0.##}%");
             }
             else
             {
                 summary.AppendLine(
-                    $" {LcStr("CstiDetailedCardProgress.Encounter.PowerComparison", "Power Comparison")}: {currentRoundMeleeClashResult.CommonClashReport.PlayerClashValue:0.#} : {currentRoundMeleeClashResult.CommonClashReport.EnemyClashValue:0.#}");
+                    $" {LcStr("CSFFDetailedCardProgress.Encounter.PowerComparison", "Power Comparison")}: {currentRoundMeleeClashResult.CommonClashReport.PlayerClashValue:0.#} : {currentRoundMeleeClashResult.CommonClashReport.EnemyClashValue:0.#}");
 
                 float playerSuccess = currentRoundMeleeClashResult.PlayerPercentChance;
                 float enemySuccess = currentRoundMeleeClashResult.EnemyPercentChance;
 
-                summary.AppendLine($"{LcStr("CstiDetailedCardProgress.Encounter.PlayerHitRate", "Player Hit Rate")}: {playerSuccess * 100f:0.##}%");
-                summary.AppendLine($"{LcStr("CstiDetailedCardProgress.Encounter.EnemyHitRate", "Enemy Hit Rate")}: {enemySuccess * 100f:0.##}%");
+                summary.AppendLine($"{LcStr("CSFFDetailedCardProgress.Encounter.PlayerHitRate", "Player Hit Rate")}: {playerSuccess * 100f:0.##}%");
+                summary.AppendLine($"{LcStr("CSFFDetailedCardProgress.Encounter.EnemyHitRate", "Enemy Hit Rate")}: {enemySuccess * 100f:0.##}%");
             }
 
             Vector2 damage = action.Damage;
             Vector2 damageStatSum = action.DamageStatSum;
             if (!action.DoesNotAttack)
             {
-                summary.AppendLine($" {LcStr("CstiDetailedCardProgress.Encounter.BasicDamagePower", "Basic Damage Power")}: {FormatMinMaxValue(damage)}");
-                summary.AppendLine($" {LcStr("CstiDetailedCardProgress.Encounter.StatusDamageBonus", "Status Damage Bonus")}: {FormatMinMaxValue(damageStatSum)}");
+                summary.AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.BasicDamagePower", "Basic Damage Power")}: {FormatMinMaxValue(damage)}");
+                summary.AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.StatusDamageBonus", "Status Damage Bonus")}: {FormatMinMaxValue(damageStatSum)}");
                 if (action.AssociatedCard)
                     foreach (PlayerEncounterVariable stat in action.AssociatedCard.CardModel.WeaponDamageStatInfluences)
                         summary.AppendLine($"  {stat.Stat.GameName.ToString()}: {FormatMinMaxValue(stat.GenerateRandomRange())}");
                 if (action.AmmoCard)
                     foreach (PlayerEncounterVariable stat in action.AmmoCard.CardModel.WeaponDamageStatInfluences)
                         summary.AppendLine($"  {stat.Stat.GameName.ToString()}: {FormatMinMaxValue(stat.GenerateRandomRange())}");
-                summary.AppendLine($" {LcStr("CstiDetailedCardProgress.Encounter.DamageTypes", "Damage Types")}: {action.DamageTypes.Select(t => t.Name.ToString()).Join()}");
-                summary.AppendLine($" {LcStr("CstiDetailedCardProgress.Encounter.HitableParts", "Hitable Parts")}:")
+                summary.AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.DamageTypes", "Damage Types")}: {action.DamageTypes.Select(t => t.Name.ToString()).Join()}");
+                summary.AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.HitableParts", "Hitable Parts")}:")
                     .AppendLine($"{FormatPlayerHitResult(encounter, action, popup, damage + damageStatSum)}");
             }
 
-            summary.AppendLine($" {LcStr("CstiDetailedCardProgress.Encounter.DistanceChange", "Distance Change")}: {GetDistanceChangeText(action.DistanceChange)}");
+            summary.AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.DistanceChange", "Distance Change")}: {GetDistanceChangeText(action.DistanceChange)}");
         }
 
-        summary.AppendLine($"{LcStr("CstiDetailedCardProgress.Encounter.CurrentEnemyStatus", "Current Enemy Status")}:")
-            .AppendLine($" {LcStr("CstiDetailedCardProgress.Encounter.Health", "Health")}: {encounter.CurrentEnemyBlood}")
-            .AppendLine($" {LcStr("CstiDetailedCardProgress.Encounter.Courage", "Courage")}: {encounter.CurrentEnemyMorale}")
-            .AppendLine($" {LcStr("CstiDetailedCardProgress.Encounter.Stamina", "Stamina")}: {encounter.CurrentEnemyStamina}")
-            .AppendLine($" {LcStr("CstiDetailedCardProgress.Encounter.MeleeSkill", "Melee Skill")}: {encounter.CurrentEnemyMeleeSkill}")
-            .AppendLine($" {LcStr("CstiDetailedCardProgress.Encounter.RangedSkill", "Ranged Skill")}: {encounter.CurrentEnemyRangedSkill}")
-            .AppendLine($" {LcStr("CstiDetailedCardProgress.Encounter.Stealth", "Stealth")}: {encounter.CurrentEnemyStealth}");
+        summary.AppendLine($"{LcStr("CSFFDetailedCardProgress.Encounter.CurrentEnemyStatus", "Current Enemy Status")}:")
+            .AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.Health", "Health")}: {encounter.CurrentEnemyBlood}")
+            .AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.Courage", "Courage")}: {encounter.CurrentEnemyMorale}")
+            .AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.Stamina", "Stamina")}: {encounter.CurrentEnemyStamina}")
+            .AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.MeleeSkill", "Melee Skill")}: {encounter.CurrentEnemyMeleeSkill}")
+            .AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.RangedSkill", "Ranged Skill")}: {encounter.CurrentEnemyRangedSkill}")
+            .AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.Stealth", "Stealth")}: {encounter.CurrentEnemyStealth}");
 
-        summary.AppendLine($"{LcStr("CstiDetailedCardProgress.Encounter.PowerDetailedData", "Power Detailed Data")}:\n{FormatPlayerClashValue(encounter, action, popup)}");
+        summary.AppendLine($"{LcStr("CSFFDetailedCardProgress.Encounter.PowerDetailedData", "Power Detailed Data")}:\n{FormatPlayerClashValue(encounter, action, popup)}");
         return summary.ToString();
     }
 
@@ -215,9 +215,9 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
     {
         return distanceChange switch
         {
-            EncounterDistanceChange.DontChangeDistance => $"{LcStr("CstiDetailedCardProgress.Encounter.NoChange", "No Change")}",
-            EncounterDistanceChange.AddDistance => $"{LcStr("CstiDetailedCardProgress.Encounter.IncreaseDistance", "Increase Distance")}",
-            EncounterDistanceChange.CloseDistance => $"{LcStr("CstiDetailedCardProgress.Encounter.DecreaseDistance", "Decrease Distance")}",
+            EncounterDistanceChange.DontChangeDistance => $"{LcStr("CSFFDetailedCardProgress.Encounter.NoChange", "No Change")}",
+            EncounterDistanceChange.AddDistance => $"{LcStr("CSFFDetailedCardProgress.Encounter.IncreaseDistance", "Increase Distance")}",
+            EncounterDistanceChange.CloseDistance => $"{LcStr("CSFFDetailedCardProgress.Encounter.DecreaseDistance", "Decrease Distance")}",
             _ => ""
         };
     }
@@ -325,7 +325,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
             if (resultReport.GetBodyLocationHitWeight(bodyPart) > 0)
             {
                 LocalizedString bodyPartName = new()
-                { LocalizationKey = $"CstiDetailedCardProgress.BodyParts.{bodyPart}", DefaultText = bodyPart.ToString()};
+                { LocalizationKey = $"CSFFDetailedCardProgress.BodyParts.{bodyPart}", DefaultText = bodyPart.ToString()};
                 List<(Vector2, WoundSeverity)> mapping = woundMappings[(int)bodyPart];
                 IEnumerable<(WoundSeverity, float)> woundsProbs = from m in mapping
                                                                   where VectorMath.RangeIntersect(playerActionDamage, m.Item1).RangeLength() > 0
@@ -346,12 +346,12 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
                 }
 
                 result.AppendLine(
-                    $"{spaces}{bodyPartName.ToString()}: {resultReport.GetBodyLocationHitWeight(bodyPart) / resultReport.TotalWeight * 100f:0}% ({LcStr("CstiDetailedCardProgress.Encounter.TotalDefense", "Total Defense")}: {enemyDefenses[(int)bodyPart]:0})");
+                    $"{spaces}{bodyPartName.ToString()}: {resultReport.GetBodyLocationHitWeight(bodyPart) / resultReport.TotalWeight * 100f:0}% ({LcStr("CSFFDetailedCardProgress.Encounter.TotalDefense", "Total Defense")}: {enemyDefenses[(int)bodyPart]:0})");
                 result.AppendLine(
                     $"{spaces}| {string.Join(" | ", mapping.Select(m => $"{VectorMath.RangeIntersect(playerActionDamage, m.Item1).RangeLength() / playerActionDamage.RangeLength() * 100f:0}%"))} |");
             }
 
-        result.AppendLine($" {LcStr("CstiDetailedCardProgress.Encounter.LethalityProbabilityOfThisAttack", "Lethality Probability of This Attack")}:{deadlyProb * 100f:0.##}%");
+        result.AppendLine($" {LcStr("CSFFDetailedCardProgress.Encounter.LethalityProbabilityOfThisAttack", "Lethality Probability of This Attack")}:{deadlyProb * 100f:0.##}%");
         // 输出结果
         return result.ToString();
     }
@@ -372,18 +372,18 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         };
         bool ranged = encounter.Distant;
         // Debug.Log(action.GetClash(true));
-        result.AppendLine($"{spaces}{LcStr("CstiDetailedCardProgress.Encounter.BaseValue", "Base Value")}: {report.PlayerActionClashValue:0}")
+        result.AppendLine($"{spaces}{LcStr("CSFFDetailedCardProgress.Encounter.BaseValue", "Base Value")}: {report.PlayerActionClashValue:0}")
     .AppendLine(
-        $"{spaces}{LcStr("CstiDetailedCardProgress.Encounter.SizeBonus", "Size Bonus")}: {(action.ActionRange == ActionRange.Ranged ? 0.0f : report.PlayerSizeClashValue):0}")
-    .AppendLine($"{spaces}{LcStr("CstiDetailedCardProgress.Encounter.WeaponLengthBonus", "Weapon Length Bonus")}: {report.PlayerActionReachClashValue}");
+        $"{spaces}{LcStr("CSFFDetailedCardProgress.Encounter.SizeBonus", "Size Bonus")}: {(action.ActionRange == ActionRange.Ranged ? 0.0f : report.PlayerSizeClashValue):0}")
+    .AppendLine($"{spaces}{LcStr("CSFFDetailedCardProgress.Encounter.WeaponLengthBonus", "Weapon Length Bonus")}: {report.PlayerActionReachClashValue}");
         if (report.PlayerClashStatsAddedValues != null && report.PlayerClashStatsAddedValues.Count > 0)
             result.AppendLine(
-                $"{spaces}{LcStr("CstiDetailedCardProgress.Encounter.StatusBonus", "Status Bonus")}:\n{string.Join("\n", report.PlayerClashStatsAddedValues.ToArray().Select(v => $"{spaces} {v.Stat.GameName.ToString()}: {ColorFloat(v.Value)}"))}");
+                $"{spaces}{LcStr("CSFFDetailedCardProgress.Encounter.StatusBonus", "Status Bonus")}:\n{string.Join("\n", report.PlayerClashStatsAddedValues.ToArray().Select(v => $"{spaces} {v.Stat.GameName.ToString()}: {ColorFloat(v.Value)}"))}");
         if (encounter.PlayerHidden)
         {
             report.PlayerClashStealthBonus = action.GetClashStealthBonus(_WithRandomness);
             // Debug.Log(action.GetClashStealthBonus(true));
-            result.AppendLine($"{spaces}{LcStr("CstiDetailedCardProgress.Encounter.StealthBonus", "Stealth Bonus")}: <color=green>{report.PlayerClashStealthBonus:0}</color>");
+            result.AppendLine($"{spaces}{LcStr("CSFFDetailedCardProgress.Encounter.StealthBonus", "Stealth Bonus")}: <color=green>{report.PlayerClashStealthBonus:0}</color>");
         }
 
         if ((!ranged && action.ActionRange == ActionRange.Ranged) ||
@@ -391,14 +391,14 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         {
             report.PlayerClashIneffectiveRangeMalus = action.GetClashIneffectiveRangeMalus(_WithRandomness);
             // Debug.Log(action.GetClashIneffectiveRangeMalus(true));
-            result.AppendLine($"{spaces}{LcStr("CstiDetailedCardProgress.Encounter.IneffectiveRangeMalus", "Ineffective Range Malus")}: <color=red>{report.PlayerClashIneffectiveRangeMalus:0}</color>");
+            result.AppendLine($"{spaces}{LcStr("CSFFDetailedCardProgress.Encounter.IneffectiveRangeMalus", "Ineffective Range Malus")}: <color=red>{report.PlayerClashIneffectiveRangeMalus:0}</color>");
         }
 
         if (action.ActionRange == ActionRange.Ranged)
         {
-            result.AppendLine($"{spaces}{LcStr("CstiDetailedCardProgress.Encounter.EnemySizeMalus", "Enemy Size Malus")}: {ColorFloat(-encounter.CurrentEnemySize)}");
-            result.AppendLine($"{spaces}{LcStr("CstiDetailedCardProgress.Encounter.InaccuracyMalus", "Inaccuracy Malus")}: {ColorFloat(-action.ClashInaccuracy.y)}");
-            result.AppendLine($"{spaces}{LcStr("CstiDetailedCardProgress.Encounter.EnemyCoverMalus", "Enemy Cover Malus")}: {ColorFloat(-encounter.CurrentEnemyCover)}");
+            result.AppendLine($"{spaces}{LcStr("CSFFDetailedCardProgress.Encounter.EnemySizeMalus", "Enemy Size Malus")}: {ColorFloat(-encounter.CurrentEnemySize)}");
+            result.AppendLine($"{spaces}{LcStr("CSFFDetailedCardProgress.Encounter.InaccuracyMalus", "Inaccuracy Malus")}: {ColorFloat(-action.ClashInaccuracy.y)}");
+            result.AppendLine($"{spaces}{LcStr("CSFFDetailedCardProgress.Encounter.EnemyCoverMalus", "Enemy Cover Malus")}: {ColorFloat(-encounter.CurrentEnemyCover)}");
         }
 
         return result.ToString();
@@ -558,7 +558,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
             if (wounds[0].DroppedCards.Length == 0) return "";
             if (playerBodyLocationHit.GetBodyLocationHitWeight(bodyPart) > 0)
                 result.AppendLine(
-                    $"{new string(' ', indent)}{new LocalizedString { LocalizationKey = $"CstiDetailedCardProgress.BodyParts.{bodyPart}", DefaultText = bodyPart.ToString()}.ToString()}({playerBodyLocationHit.GetBodyLocationHitWeight(bodyPart) / playerBodyLocationHit.TotalWeight * 100f:0.#}%): {wounds.Select(w => w.DroppedCards[0].CardName.ToString()).Join()} ({LcStr("CstiDetailedCardProgress.Encounter.AttackDefenseRatio", "Attack-Defense Ratio")}: {currentRoundEnemyDamageReport.EnemyDamage}:{currentRoundEnemyDamageReport.PlayerDefense})");
+                    $"{new string(' ', indent)}{new LocalizedString { LocalizationKey = $"CSFFDetailedCardProgress.BodyParts.{bodyPart}", DefaultText = bodyPart.ToString()}.ToString()}({playerBodyLocationHit.GetBodyLocationHitWeight(bodyPart) / playerBodyLocationHit.TotalWeight * 100f:0.#}%): {wounds.Select(w => w.DroppedCards[0].CardName.ToString()).Join()} ({LcStr("CSFFDetailedCardProgress.Encounter.AttackDefenseRatio", "Attack-Defense Ratio")}: {currentRoundEnemyDamageReport.EnemyDamage}:{currentRoundEnemyDamageReport.PlayerDefense})");
         }
 
         return result.ToString();
@@ -621,7 +621,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
             texts.Add(FormatBasicEntry(
                 new LocalizedString
                 {
-                    LocalizationKey = "CstiDetailedCardProgress.GivenCardStateChange",
+                    LocalizationKey = "CSFFDetailedCardProgress.GivenCardStateChange",
                     DefaultText = "Given Card State Change"
                 }, ""));
             texts.Add(cardModText);
@@ -633,7 +633,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
             string liquidDropText =
                 $"{FormatMinMaxValue(currentLiquidDrop.Quantity)} ({currentLiquidDrop.LiquidCard.CardType}){currentLiquidDrop.LiquidCard.CardName.ToString()}";
             texts.Add(FormatBasicEntry(
-                $"<size=55%>{new LocalizedString { LocalizationKey = "CstiDetailedCardProgress.Action.LiquidDrops", DefaultText = "Liquid Drops" }.ToString()}</size>",
+                $"<size=55%>{new LocalizedString { LocalizationKey = "CSFFDetailedCardProgress.Action.LiquidDrops", DefaultText = "Liquid Drops" }.ToString()}</size>",
                 "<size=55%>" + liquidDropText + "</size>", indent: indent));
         }
 
@@ -650,7 +650,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
             string timeModText = FormatTimeCostModifiers(action, fromCard, indent);
             texts.Add(FormatBasicEntry(new LocalizedString()
             {
-                LocalizationKey = "CstiDetailedCardProgress.TimeCostModifiers",
+                LocalizationKey = "CSFFDetailedCardProgress.TimeCostModifiers",
                 DefaultText = "Time Cost Modifiers"
             }, "", indent: indent));
             texts.Add(timeModText);
@@ -664,7 +664,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
             {
                 texts.Add(FormatBasicEntry(
                     new LocalizedString
-                    { LocalizationKey = "CstiDetailedCardProgress.StatModifier", DefaultText = "Stat Modifier" }
+                    { LocalizationKey = "CSFFDetailedCardProgress.StatModifier", DefaultText = "Stat Modifier" }
                         .ToString(),
                     "", indent: indent));
                 texts.Add(stateModTexts.Join(delimiter: "\n"));
@@ -678,7 +678,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
             texts.Add(FormatBasicEntry(
                 new LocalizedString
                 {
-                    LocalizationKey = "CstiDetailedCardProgress.CardStateChange",
+                    LocalizationKey = "CSFFDetailedCardProgress.CardStateChange",
                     DefaultText = "Card State Change"
                 }
                     .ToString(),
@@ -717,33 +717,33 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
                 cardModTexts.Add(FormatBasicEntry(FormatMinMaxValue(stateChange.SpoilageChange),
                     string.IsNullOrEmpty(fromCard.CardModel.SpoilageTime.CardStatName)
                         ? new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Spoilage", DefaultText = "Spoilage" }
+                        { LocalizationKey = "CSFFDetailedCardProgress.Spoilage", DefaultText = "Spoilage" }
                             .ToString()
                         : fromCard.CardModel.SpoilageTime.CardStatName, indent: indent + 2));
             if (stateChange.UsageChange.magnitude != 0)
                 cardModTexts.Add(FormatBasicEntry(FormatMinMaxValue(stateChange.UsageChange),
                     string.IsNullOrEmpty(fromCard.CardModel.UsageDurability.CardStatName)
                         ? new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Usage", DefaultText = "Usage" }.ToString()
+                        { LocalizationKey = "CSFFDetailedCardProgress.Usage", DefaultText = "Usage" }.ToString()
                         : fromCard.CardModel.UsageDurability.CardStatName, indent: indent + 2));
             if (stateChange.FuelChange.magnitude != 0)
                 cardModTexts.Add(FormatBasicEntry(FormatMinMaxValue(stateChange.FuelChange),
                     string.IsNullOrEmpty(fromCard.CardModel.FuelCapacity.CardStatName)
                         ? new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Fuel", DefaultText = "Fuel" }.ToString()
+                        { LocalizationKey = "CSFFDetailedCardProgress.Fuel", DefaultText = "Fuel" }.ToString()
                         : fromCard.CardModel.FuelCapacity.CardStatName, indent: indent + 2));
             if (stateChange.ChargesChange.magnitude != 0)
                 cardModTexts.Add(FormatBasicEntry(FormatMinMaxValue(stateChange.ChargesChange),
                     string.IsNullOrEmpty(fromCard.CardModel.Progress.CardStatName)
                         ? new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Progress", DefaultText = "Progress" }
+                        { LocalizationKey = "CSFFDetailedCardProgress.Progress", DefaultText = "Progress" }
                             .ToString()
                         : fromCard.CardModel.Progress.CardStatName, indent: indent + 2));
             if (stateChange.LiquidQuantityChange.magnitude != 0)
                 cardModTexts.Add(FormatBasicEntry(FormatMinMaxValue(stateChange.LiquidQuantityChange),
                     new LocalizedString
                     {
-                        LocalizationKey = "CstiDetailedCardProgress.LiquidQuantityChange",
+                        LocalizationKey = "CSFFDetailedCardProgress.LiquidQuantityChange",
                         DefaultText = "Liquid Quantity"
                     }.ToString(), indent: indent + 2));
             if (stateChange.Special1Change.magnitude != 0)
@@ -771,14 +771,14 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         {
             cardModTexts.Add(FormatBasicEntry(
                 new LocalizedString
-                { LocalizationKey = "CstiDetailedCardProgress.TransformInto", DefaultText = "Transform into" }
+                { LocalizationKey = "CSFFDetailedCardProgress.TransformInto", DefaultText = "Transform into" }
                     .ToString(),
                 $"{stateChange.TransformInto.CardName.ToString()}", indent: indent + 2));
         }
         else if (stateChange.ModType == CardModifications.Destroy)
         {
             cardModTexts.Add(FormatBasicEntry(
-                new LocalizedString { LocalizationKey = "CstiDetailedCardProgress.Destroy", DefaultText = "Destroy" }
+                new LocalizedString { LocalizationKey = "CSFFDetailedCardProgress.Destroy", DefaultText = "Destroy" }
                     .ToString(),
                 fromCard.CardModel.CardName.ToString(), "red", indent + 2));
         }
@@ -787,7 +787,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         {
             cardModTexts.Add(FormatBasicEntry(
                 new LocalizedString
-                { LocalizationKey = "CstiDetailedCardProgress.ModifyLiquid", DefaultText = "Modify Liquid" }
+                { LocalizationKey = "CSFFDetailedCardProgress.ModifyLiquid", DefaultText = "Modify Liquid" }
                     .ToString(), "", indent: indent + 2));
             cardModTexts.Add(FormatBasicEntry(
                 FormatMinMaxValue(stateChange.LiquidQuantityChange), fromCard.ContainedLiquidModel.CardName, indent: indent + 4));
@@ -815,7 +815,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
                     $"{statModifier.Stat.GameName.ToString()}", indent: indent));
             if (statModifier.RateModifier.magnitude != 0)
                 texts.Add(FormatBasicEntry($"{FormatMinMaxValue(statModifier.RateModifier)}",
-                    $"{statModifier.Stat.GameName.ToString()} {new LocalizedString { LocalizationKey = "CstiDetailedCardProgress.Rate", DefaultText = "Rate" }.ToString()}",
+                    $"{statModifier.Stat.GameName.ToString()} {new LocalizedString { LocalizationKey = "CSFFDetailedCardProgress.Rate", DefaultText = "Rate" }.ToString()}",
                     indent: indent));
         }
 
@@ -848,7 +848,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
     public static string FormatWeight(float weight)
     {
         return
-            $"<color=\"yellow\">{weight:0.#}</color> {new LocalizedString { LocalizationKey = "CstiDetailedCardProgress.FormatWeight.Weight", DefaultText = "Weight" }.ToString()}";
+            $"<color=\"yellow\">{weight:0.#}</color> {new LocalizedString { LocalizationKey = "CSFFDetailedCardProgress.FormatWeight.Weight", DefaultText = "Weight" }.ToString()}";
     }
 
     public static string FormatProgressAndRate(float current, float max, string name, float rate,
@@ -866,13 +866,13 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
     public static string FormatWeaponStats(Vector2 clash, Vector2 damage, float reach, int indent = 0)
     {
         LocalizedString title = new()
-            { LocalizationKey = "CstiDetailedCardProgress.WeaponStats", DefaultText = "Weapon Stats" };
+            { LocalizationKey = "CSFFDetailedCardProgress.WeaponStats", DefaultText = "Weapon Stats" };
         LocalizedString clashTitle = new()
-            { LocalizationKey = "CstiDetailedCardProgress.WeaponStats.Clash", DefaultText = "Clash" };
+            { LocalizationKey = "CSFFDetailedCardProgress.WeaponStats.Clash", DefaultText = "Clash" };
         LocalizedString damageTitle = new()
-            { LocalizationKey = "CstiDetailedCardProgress.WeaponStats.Damage", DefaultText = "Damage" };
+            { LocalizationKey = "CSFFDetailedCardProgress.WeaponStats.Damage", DefaultText = "Damage" };
         LocalizedString reachTitle = new()
-            { LocalizationKey = "CstiDetailedCardProgress.WeaponStats.Reach", DefaultText = "Reach" };
+            { LocalizationKey = "CSFFDetailedCardProgress.WeaponStats.Reach", DefaultText = "Reach" };
 
         return $"{FormatBasicEntry(title, "", indent: indent)}\n" +
                $"<size=75%>{FormatBasicEntry(FormatMinMaxValue(clash),clashTitle, indent: indent + 2)}\n" +
@@ -886,44 +886,44 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         if (card.IsWeapon)
         {
             texts.Add(FormatBasicEntry(FormatMinMaxValue(card.BaseClashValue),
-                LcStr("CstiDetailedCardProgress.WeaponStats.Clash", "Clash")));
+                LcStr("CSFFDetailedCardProgress.WeaponStats.Clash", "Clash")));
 
             texts.Add(FormatBasicEntry(FormatMinMaxValue(card.WeaponDamage),
-                LcStr("CstiDetailedCardProgress.WeaponStats.WeaponDamage", "Weapon Damage")));
+                LcStr("CSFFDetailedCardProgress.WeaponStats.WeaponDamage", "Weapon Damage")));
 
             texts.Add(FormatBasicEntry(ColorFloat(card.WeaponReach),
-                LcStr("CstiDetailedCardProgress.WeaponStats.WeaponReach", "Weapon Reach")));
+                LcStr("CSFFDetailedCardProgress.WeaponStats.WeaponReach", "Weapon Reach")));
 
             texts.Add(FormatBasicEntry(FormatMinMaxValue(card.ClashIneffectiveRangeMalus),
-                LcStr("CstiDetailedCardProgress.WeaponStats.ClashIneffectiveRangeMalus", "Clash Ineffective Range Malus")));
+                LcStr("CSFFDetailedCardProgress.WeaponStats.ClashIneffectiveRangeMalus", "Clash Ineffective Range Malus")));
 
             texts.Add(FormatBasicEntry(FormatMinMaxValue(card.ClashVsEscapeBonus),
-                LcStr("CstiDetailedCardProgress.WeaponStats.ClashVsEscapeBonus", "Clash Vs Escape Bonus")));
+                LcStr("CSFFDetailedCardProgress.WeaponStats.ClashVsEscapeBonus", "Clash Vs Escape Bonus")));
 
             texts.Add(FormatBasicEntry(FormatMinMaxValue(card.DmgVsEscapeBonus),
-                LcStr("CstiDetailedCardProgress.WeaponStats.DmgVsEscapeBonus", "Damage Vs Escape Bonus")));
+                LcStr("CSFFDetailedCardProgress.WeaponStats.DmgVsEscapeBonus", "Damage Vs Escape Bonus")));
 
             texts.Add(FormatBasicEntry(FormatMinMaxValue(card.ClashStealthBonus),
-                LcStr("CstiDetailedCardProgress.WeaponStats.ClashStealthBonus", "Clash Stealth Bonus")));
+                LcStr("CSFFDetailedCardProgress.WeaponStats.ClashStealthBonus", "Clash Stealth Bonus")));
         }
 
         if (card.IsCover)
         {
             texts.Add(FormatBasicEntry(ColorFloat(card.PlayerAddedCover),
-                LcStr("CstiDetailedCardProgress.ArmorStats.PlayerAddedCover", "Player Added Cover")));
+                LcStr("CSFFDetailedCardProgress.ArmorStats.PlayerAddedCover", "Player Added Cover")));
 
             texts.Add(FormatBasicEntry(ColorFloat(card.EnemyAddedCover),
-                LcStr("CstiDetailedCardProgress.ArmorStats.EnemyAddedCover", "Enemy Added Cover")));
+                LcStr("CSFFDetailedCardProgress.ArmorStats.EnemyAddedCover", "Enemy Added Cover")));
 
             texts.Add(FormatBasicEntry(ColorFloat(card.PlayerAddedStealth),
-                LcStr("CstiDetailedCardProgress.ArmorStats.PlayerAddedStealth", "Player Added Stealth")));
+                LcStr("CSFFDetailedCardProgress.ArmorStats.PlayerAddedStealth", "Player Added Stealth")));
 
             texts.Add(FormatBasicEntry(ColorFloat(card.EnemyAddedStealth),
-                LcStr("CstiDetailedCardProgress.ArmorStats.EnemyAddedStealth", "Enemy Added Stealth")));
+                LcStr("CSFFDetailedCardProgress.ArmorStats.EnemyAddedStealth", "Enemy Added Stealth")));
         }
 
         LocalizedString title = new()
-            { LocalizationKey = "CstiDetailedCardProgress.WeaponStats", DefaultText = "Weapon Stats" };
+            { LocalizationKey = "CSFFDetailedCardProgress.WeaponStats", DefaultText = "Weapon Stats" };
         
         return $"{FormatBasicEntry(title, "", indent: indent)}\n" +
                $"<size=75%>{texts.Join(delimiter:"\n")}</size>";
@@ -932,8 +932,8 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
     public static string TimeSpanFormat(TimeSpan ts)
     {
         return ts.Days >= 1
-            ? $"{ts.Days:0}{new LocalizedString { LocalizationKey = "CstiDetailedCardProgress.d", DefaultText = "d" }.ToString()}{ts.Hours:0}{new LocalizedString { LocalizationKey = "CstiDetailedCardProgress.h", DefaultText = "h" }.ToString()}"
-            : $"{ts.Hours:0}{new LocalizedString { LocalizationKey = "CstiDetailedCardProgress.h", DefaultText = "h" }.ToString()}";
+            ? $"{ts.Days:0}{new LocalizedString { LocalizationKey = "CSFFDetailedCardProgress.d", DefaultText = "d" }.ToString()}{ts.Hours:0}{new LocalizedString { LocalizationKey = "CSFFDetailedCardProgress.h", DefaultText = "h" }.ToString()}"
+            : $"{ts.Hours:0}{new LocalizedString { LocalizationKey = "CSFFDetailedCardProgress.h", DefaultText = "h" }.ToString()}";
     }
 
     public static string FormatRate(float value, float current, float max, float min = 0,
@@ -948,15 +948,15 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
             float time = Math.Abs((max - current) / value);
             TimeSpan timeSpan = new(0, (int)(Math.Ceiling(time) * 15), 0);
             est =
-                $" ({new LocalizedString { LocalizationKey = "CstiDetailedCardProgress.est.", DefaultText = "est." }.ToString()} {Math.Ceiling(time)}t/{TimeSpanFormat(timeSpan)})";
+                $" ({new LocalizedString { LocalizationKey = "CSFFDetailedCardProgress.est.", DefaultText = "est." }.ToString()} {Math.Ceiling(time)}t/{TimeSpanFormat(timeSpan)})";
             if (stat != null && currentCard != null && stat.HasActionOnFull && stat.OnFull != null)
             {
                 statOnFullZeroTitle = FormatBasicEntry(new LocalizedString
-                { LocalizationKey = "CstiDetailedCardProgress.statOnFullTitle", DefaultText = "On Full" }
+                { LocalizationKey = "CSFFDetailedCardProgress.statOnFullTitle", DefaultText = "On Full" }
                     .ToString(), "", indent: 4);
                 CollectionDropReport collectionDropsReport =
                     GameManager.Instance.GetCollectionDropsReport(stat.OnFull, currentCard, false);
-                dropList = Action.FormatCardDropList(
+                dropList = System.Action.FormatCardDropList(
                     collectionDropsReport, currentCard,
                     action: stat.OnFull, indent: 6);
                 statOnFullZeroText = FormatCardAction(stat.OnFull, currentCard, 6);
@@ -967,18 +967,18 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
             float time = Math.Abs((current - min) / value);
             TimeSpan timeSpan = new(0, (int)(Math.Ceiling(time) * 15), 0);
             est =
-                $" ({new LocalizedString { LocalizationKey = "CstiDetailedCardProgress.est.", DefaultText = "est." }.ToString()} {Math.Ceiling(time)}t/{TimeSpanFormat(timeSpan)})";
+                $" ({new LocalizedString { LocalizationKey = "CSFFDetailedCardProgress.est.", DefaultText = "est." }.ToString()} {Math.Ceiling(time)}t/{TimeSpanFormat(timeSpan)})";
             if (stat != null && currentCard != null && stat.HasActionOnZero && stat.OnZero != null)
             {
                 statOnFullZeroTitle = FormatBasicEntry(new LocalizedString
-                { LocalizationKey = "CstiDetailedCardProgress.statOnZeroTitle", DefaultText = "On Zero" }
+                { LocalizationKey = "CSFFDetailedCardProgress.statOnZeroTitle", DefaultText = "On Zero" }
                     .ToString(), "", indent: 4);
                 bool uniqueOnBoard = currentCard.CardModel.UniqueOnBoard;
                 if (currentCard.CardModel.CardType == CardTypes.Weather) currentCard.CardModel.UniqueOnBoard = false;
                 CollectionDropReport collectionDropsReport =
                     GameManager.Instance.GetCollectionDropsReport(stat.OnZero, currentCard, false);
                 currentCard.CardModel.UniqueOnBoard = uniqueOnBoard;
-                dropList = Action.FormatCardDropList(
+                dropList = System.Action.FormatCardDropList(
                     collectionDropsReport, currentCard,
                     action: stat.OnZero, indent: 6);
                 statOnFullZeroText = FormatCardAction(stat.OnZero, currentCard, 6);
@@ -988,7 +988,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         List<string> texts = new()
         {
             FormatTooltipEntry(value,
-                $"{new LocalizedString { LocalizationKey = "CstiDetailedCardProgress.Rate", DefaultText = "Rate" }.ToString()}<size=70%>{est}</size>",
+                $"{new LocalizedString { LocalizationKey = "CSFFDetailedCardProgress.Rate", DefaultText = "Rate" }.ToString()}<size=70%>{est}</size>",
                 2)
         };
         if (!string.IsNullOrWhiteSpace(statOnFullZeroTitle)) texts.Add(statOnFullZeroTitle);

@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 using HarmonyLib;
 using System.Runtime.InteropServices.ComTypes;
 
-namespace CstiDetailedCardProgress;
+namespace CSFFCardDetailTooltip;
 
 internal class Locale
 {

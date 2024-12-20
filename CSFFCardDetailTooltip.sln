@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35527.113 d17.12
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSFFCardDetailTooltip", "CSFFCardDetailTooltip.csproj", "{74BD132B-096B-4385-AF15-4924D24EB031}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug-MelonLoader|Any CPU = Debug-MelonLoader|Any CPU
+		Release|Any CPU = Release|Any CPU
+		Release-MelonLoader|Any CPU = Release-MelonLoader|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{74BD132B-096B-4385-AF15-4924D24EB031}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74BD132B-096B-4385-AF15-4924D24EB031}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74BD132B-096B-4385-AF15-4924D24EB031}.Debug-MelonLoader|Any CPU.ActiveCfg = Debug-MelonLoader|Any CPU
+		{74BD132B-096B-4385-AF15-4924D24EB031}.Debug-MelonLoader|Any CPU.Build.0 = Debug-MelonLoader|Any CPU
+		{74BD132B-096B-4385-AF15-4924D24EB031}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74BD132B-096B-4385-AF15-4924D24EB031}.Release|Any CPU.Build.0 = Release|Any CPU
+		{74BD132B-096B-4385-AF15-4924D24EB031}.Release-MelonLoader|Any CPU.ActiveCfg = Release-MelonLoader|Any CPU
+		{74BD132B-096B-4385-AF15-4924D24EB031}.Release-MelonLoader|Any CPU.Build.0 = Release-MelonLoader|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

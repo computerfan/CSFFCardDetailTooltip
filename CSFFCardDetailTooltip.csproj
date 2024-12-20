@@ -1,29 +1,31 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<TargetFramework>net472</TargetFramework>
-		<AssemblyName>CstiDetailedCardProgress</AssemblyName>
-		<Description>CSTI Detailed Card Progress Mod</Description>
-		<Version>1.1.4</Version>
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<LangVersion>latest</LangVersion>
-		<PackageId>space.cfan.CstiDetailedCardProgress</PackageId>
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <AssemblyName>CSFFCardDetailTooltip</AssemblyName>
+    <Description>CSFF Card Detail Tooltip Mod (Formerly known as Detailed Card Progress)</Description>
+    <Product>CSFFCardDetailTooltipMod</Product>
+    <Version>1.0.0</Version>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
+    <PackageId>space.cfan.CSFFCardDetailTooltip</PackageId>
 		<Authors>computerfan</Authors>
-		<Copyright>MIT License Copyright © 2022 $(Authors)</Copyright>
-		<Product>CSTIDetailedCardProgressMod</Product>
-		<Company />
-		<GameAssemblyPath Condition="'$(GameAssemblyPath)' == ''">..\..\Card Survival - Tropical Island_Data\Managed</GameAssemblyPath>
+		<Copyright>MIT License Copyright © 2024 $(Authors)</Copyright>
+    <GameAssemblyPath Condition="'$(GameAssemblyPath)' == ''">Assembly\Game\Win</GameAssemblyPath>
 		<GameAssemblyPath Condition="'$(GameAssemblyPath)' != '' and ('$(Configuration)'=='Release-MelonLoader' or '$(Configuration)'=='Debug-MelonLoader')">android\managed</GameAssemblyPath>
 		<MelonLoaderAssemblyPath Condition="'$(MelonLoaderAssemblyPath)' == ''">..\MelonLoader</MelonLoaderAssemblyPath>
 		<AssemblyUnhollowerAssemblyPath Condition="'$(AssemblyUnhollowerAssemblyPath)' == ''">..\AssemblyUnhollower</AssemblyUnhollowerAssemblyPath>
 		<DebugType>Full</DebugType>
 		<Configurations>Debug;Release;Release-MelonLoader;Debug-MelonLoader</Configurations>
-		<PackageProjectUrl>https://github.com/computerfan/CstiDetailedCardProgress</PackageProjectUrl>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<AssemblyVersion></AssemblyVersion>
-	</PropertyGroup>
+    <RestoreAdditionalProjectSources>
+      https://api.nuget.org/v3/index.json;
+      https://nuget.bepinex.dev/v3/index.json;
+      https://nuget.samboy.dev/v3/index.json
+    </RestoreAdditionalProjectSources>
+    <RootNamespace>CSFFCardDetailTooltip</RootNamespace>
+  </PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MelonLoader|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MelonLoader|AnyCPU'">
 		<DefineConstants>TRACE;MELON_LOADER</DefineConstants>
 		<Optimize>True</Optimize>
 	</PropertyGroup>
@@ -43,22 +45,22 @@
 		<EmbeddedResource Include="locale\简体中文.csv" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
-		<PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.1">
-		  <PrivateAssets>all</PrivateAssets>
-		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="BepInEx.Core" Version="5.4.17" />
-		<PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />
-		<PackageReference Include="UnityEngine.Modules" Version="2019.4.35" IncludeAssets="compile" />
-	</ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
+    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="BepInEx.Core" Version="5.*" />
+    <PackageReference Include="BepInEx.PluginInfoProps" Version="2.*" />
+    <PackageReference Include="UnityEngine.Modules" Version="2019.4.38" IncludeAssets="compile" />
+  </ItemGroup>
+  
+  <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
+  </ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
-		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
-	</ItemGroup>
-
-	<ItemGroup>
+  <ItemGroup>
 		<Reference Include="Assembly-CSharp">
 			<HintPath>$(GameAssemblyPath)\Assembly-CSharp.dll</HintPath>
 			<Publicize Condition="'$(Configuration)'!='Release-MelonLoader' and '$(Configuration)'!='Debug-MelonLoader'">true</Publicize>
@@ -135,5 +137,4 @@
 			<HintPath>$(AssemblyUnhollowerAssemblyPath)\UnhollowerRuntimeLib.dll</HintPath>
 		</Reference>
 	</ItemGroup>
-
 </Project>

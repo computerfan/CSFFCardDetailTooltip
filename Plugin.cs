@@ -2,6 +2,7 @@
 using MelonLoader;
 #else
 using BepInEx;
+using BepInEx.Logging;
 #endif
 using System;
 using System.Collections.Generic;
@@ -9,11 +10,11 @@ using BepInEx.Configuration;
 using HarmonyLib;
 using UnityEngine;
 using UnityEngine.UI;
-using static CstiDetailedCardProgress.Utils;
+using static CSFFCardDetailTooltip.Utils;
 
 
 #if MELON_LOADER
-[assembly: MelonInfo(typeof(CstiDetailedCardProgress.Plugin), CstiDetailedCardProgress.PluginInfo.PLUGIN_NAME, CstiDetailedCardProgress.PluginInfo.PLUGIN_VERSION, "computerfan")]
+[assembly: MelonInfo(typeof(CSFFCardDetailTooltip.Plugin), CSFFCardDetailTooltip.PluginInfo.PLUGIN_NAME, CSFFCardDetailTooltip.PluginInfo.PLUGIN_VERSION, "computerfan")]
 [assembly: MelonGame("WinterSpring Games", "Card Survival - Tropical Island")]
 [assembly: MelonGame("WinterSpringGames", "CardSurvivalTropicalIsland")]
 [assembly: MelonGame("winterspringgames", "survivaljourney")]
@@ -23,7 +24,7 @@ using static CstiDetailedCardProgress.Utils;
 [assembly: MelonPlatform((MelonPlatformAttribute.CompatiblePlatforms)3)] // 3 = Android
 #endif
 
-namespace CstiDetailedCardProgress
+namespace CSFFCardDetailTooltip
 {
 #if MELON_LOADER
     public class Plugin : MelonMod
@@ -62,8 +63,8 @@ namespace CstiDetailedCardProgress
         {
             GeneralPreferencesCategory = MelonPreferences.CreateCategory("General");
             TweakPreferencesCategory = MelonPreferences.CreateCategory("Tweak");
-            GeneralPreferencesCategory.SetFilePath("UserData/CstiDetailedCardProgress.cfg");
-            TweakPreferencesCategory.SetFilePath("UserData/CstiDetailedCardProgress.cfg");
+            GeneralPreferencesCategory.SetFilePath("UserData/CSFFCardDetailTooltip.cfg");
+            TweakPreferencesCategory.SetFilePath("UserData/CSFFCardDetailTooltip.cfg");
             EnabledEntry =
  GeneralPreferencesCategory.CreateEntry(nameof(Enabled), true, "If true, will show the tool tips.");
             HotKeyEntry =
@@ -232,7 +233,7 @@ namespace CstiDetailedCardProgress
                     {
                         CardOnCardAction cardOnCardAction = recipe.GetResult(cookingstatus.Card);
                         CollectionDropReport dropReport =
-                            gm.GetCollectionDropsReport(cardOnCardAction, __instance, false);
+                            gm.GetCollectionDropsReport(cardOnCardAction, __instance, false, false);
                         texts.Add("<size=70%>" + Action.FormatCardDropList(dropReport, __instance, indent: 2) +
                                   "</size>");
                     }
@@ -241,10 +242,10 @@ namespace CstiDetailedCardProgress
 
             bool isShowWeightType = Array.IndexOf(new[] { CardTypes.Hand, CardTypes.Item, CardTypes.Location },
                 cardModel.CardType) > -1;
-            if (isShowWeightType && (__instance.CurrentWeight != 0 || cardModel.WeightReductionWhenEquipped != 0 ||
+            if (isShowWeightType && (__instance.CurrentWeight(false) != 0 || cardModel.WeightReductionWhenEquipped != 0 ||
                                      (__instance.CardsInInventory != null && __instance.CardsInInventory.Count > 0)))
             {
-                texts.Add(FormatWeight(__instance.CurrentWeight));
+                texts.Add(FormatWeight(__instance.CurrentWeight(false)));
 
 
                 if (cardModel.CardType == CardTypes.Blueprint)
@@ -252,7 +253,7 @@ namespace CstiDetailedCardProgress
                     texts.Add(FormatTooltipEntry(cardModel.BlueprintResultWeight,
                         new LocalizedString
                         {
-                            LocalizationKey = "CstiDetailedCardProgress.BlueprintResultWeight",
+                            LocalizationKey = "CSFFCardDetailTooltip.BlueprintResultWeight",
                             DefaultText = "BlueprintResultWeight"
                         }, 2));
                 }
@@ -263,7 +264,7 @@ namespace CstiDetailedCardProgress
                         texts.Add(FormatTooltipEntry(cardModel.WeightReductionWhenEquipped,
                             new LocalizedString
                             {
-                                LocalizationKey = "CstiDetailedCardProgress.EquippedReduction",
+                                LocalizationKey = "CSFFCardDetailTooltip.EquippedReduction",
                                 DefaultText = "Equipped Reduction"
                             }, 2));
                 }
@@ -275,11 +276,11 @@ namespace CstiDetailedCardProgress
                     texts.Add(FormatTooltipEntry(__instance.InventoryWeight(),
                         new LocalizedString
                         {
-                            LocalizationKey = "CstiDetailedCardProgress.InventoryWeight",
+                            LocalizationKey = "CSFFCardDetailTooltip.InventoryWeight",
                             DefaultText = "Inventory Weight"
                         }, 2));
                     if (__instance.ContainedLiquid)
-                        texts.Add(FormatTooltipEntry(__instance.ContainedLiquid.CurrentWeight,
+                        texts.Add(FormatTooltipEntry(__instance.ContainedLiquid.CurrentWeight(false),
                             __instance.ContainedLiquid.CardModel.CardName.ToString(), 4));
                     if (__instance.CardsInInventory != null)
                     {
@@ -287,7 +288,7 @@ namespace CstiDetailedCardProgress
                             texts.Add(FormatBasicEntry(
                                 $"{__instance.InventoryWeight(true)}/{__instance.MaxWeightCapacity}",
                                 new LocalizedString
-                                { LocalizationKey = "CstiDetailedCardProgress.Capacity", DefaultText = "Capacity" },
+                                { LocalizationKey = "CSFFCardDetailTooltip.Capacity", DefaultText = "Capacity" },
                                 indent: 4));
                         for (int i = 0; i < __instance.CardsInInventory.Count; i++)
                             if (__instance.CardsInInventory.get_Item(i) != null &&
@@ -301,12 +302,12 @@ namespace CstiDetailedCardProgress
                         texts.Add(FormatTooltipEntry(-cardModel.BlueprintResultWeight,
                             new LocalizedString
                             {
-                                LocalizationKey = "CstiDetailedCardProgress.WeightReduction",
+                                LocalizationKey = "CSFFCardDetailTooltip.WeightReduction",
                                 DefaultText = "Weight Reduction"
                             }, 4));
                     else if (cardModel.ContentWeightReduction != 0)
                         texts.Add(FormatTooltipEntry(cardModel.ContentWeightReduction,
-                            $"{cardModel.CardName.ToString()} {new LocalizedString { LocalizationKey = "CstiDetailedCardProgress.Reduction", DefaultText = "Reduction" }.ToString()}",
+                            $"{cardModel.CardName.ToString()} {new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Reduction", DefaultText = "Reduction" }.ToString()}",
                             4));
                 }
             }
@@ -359,20 +360,20 @@ namespace CstiDetailedCardProgress
                         : cardModel.SpoilageTime.MaxValue,
                     string.IsNullOrEmpty(cardModel.SpoilageTime.CardStatName)
                         ? new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Spoilage", DefaultText = "Spoilage" }
+                        { LocalizationKey = "CSFFCardDetailTooltip.Spoilage", DefaultText = "Spoilage" }
                         : __instance.CardModel.SpoilageTime.CardStatName,
                     __instance.CurrentSpoilageRate + (recipeStateChange?.SpoilageChange.x ?? 0), __instance,
                     cardModel.SpoilageTime));
                 if (cardModel.SpoilageTime.RatePerDaytimePoint != 0)
                     texts.Add(FormatRateEntry(cardModel.SpoilageTime.RatePerDaytimePoint,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Base", DefaultText = "Base" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Base", DefaultText = "Base" }));
                 if (baseSpoilageRate.Count > 0)
                     texts.Add(baseSpoilageRate.Join(delimiter: "\n"));
                 if (__instance.IsCooking())
                     texts.Add(FormatRateEntry(cardModel.CookingConditions.ExtraSpoilageRate,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Cooking", DefaultText = "Cooking" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Cooking", DefaultText = "Cooking" }));
                 if (cardModel.LocalCounterEffects != null)
                     for (int i = 0; i < cardModel.LocalCounterEffects.Length; i++)
                         if (cardModel.LocalCounterEffects[i].IsActive(__instance))
@@ -382,10 +383,10 @@ namespace CstiDetailedCardProgress
                     graphicsM.CharacterWindow.HasCardEquipped(__instance))
                     texts.Add(FormatRateEntry(cardModel.SpoilageTime.ExtraRateWhenEquipped,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Equipped", DefaultText = "Equipped" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Equipped", DefaultText = "Equipped" }));
                 if ((recipeStateChange?.SpoilageChange.x ?? 0) != 0)
                     texts.Add(FormatRateEntry(recipeStateChange?.SpoilageChange.x ?? 0,
-                        $"{new LocalizedString { LocalizationKey = "CstiDetailedCardProgress.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
+                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
             }
 
             // liquid spoilage temp fix
@@ -397,19 +398,19 @@ namespace CstiDetailedCardProgress
                         : __instance.ContainedLiquid.CardModel.SpoilageTime.MaxValue,
                     string.IsNullOrEmpty(__instance.ContainedLiquid.CardModel.SpoilageTime.CardStatName)
                         ? new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Spoilage", DefaultText = "Spoilage" }
+                        { LocalizationKey = "CSFFCardDetailTooltip.Spoilage", DefaultText = "Spoilage" }
                         : __instance.ContainedLiquid.CardModel.SpoilageTime.CardStatName,
                     __instance.ContainedLiquid.CurrentSpoilageRate + (recipeStateChange?.SpoilageChange.x ?? 0)));
                 if (__instance.ContainedLiquid.CardModel.SpoilageTime.RatePerDaytimePoint != 0)
                     texts.Add(FormatRateEntry(__instance.ContainedLiquid.CardModel.SpoilageTime.RatePerDaytimePoint,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Base", DefaultText = "Base" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Base", DefaultText = "Base" }));
                 if (baseSpoilageRate.Count > 0)
                     texts.Add(baseSpoilageRate.Join(delimiter: "\n"));
                 if (__instance.ContainedLiquid.IsCooking())
                     texts.Add(FormatRateEntry(__instance.ContainedLiquid.CardModel.CookingConditions.ExtraSpoilageRate,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Cooking", DefaultText = "Cooking" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Cooking", DefaultText = "Cooking" }));
                 if (__instance.ContainedLiquid.CardModel.LocalCounterEffects != null)
                     for (int i = 0; i < __instance.ContainedLiquid.CardModel.LocalCounterEffects.Length; i++)
                         if (__instance.ContainedLiquid.CardModel.LocalCounterEffects[i]
@@ -422,10 +423,10 @@ namespace CstiDetailedCardProgress
                     graphicsM.CharacterWindow.HasCardEquipped(__instance.ContainedLiquid))
                     texts.Add(FormatRateEntry(__instance.ContainedLiquid.CardModel.SpoilageTime.ExtraRateWhenEquipped,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Equipped", DefaultText = "Equipped" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Equipped", DefaultText = "Equipped" }));
                 if ((recipeStateChange?.SpoilageChange.x ?? 0) != 0)
                     texts.Add(FormatRateEntry(recipeStateChange?.SpoilageChange.x ?? 0,
-                        $"{new LocalizedString { LocalizationKey = "CstiDetailedCardProgress.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
+                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
             }
 
             if (cardModel.UsageDurability &&
@@ -437,20 +438,20 @@ namespace CstiDetailedCardProgress
                         : cardModel.UsageDurability.MaxValue,
                     string.IsNullOrEmpty(cardModel.UsageDurability.CardStatName)
                         ? new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Usage", DefaultText = "Usage" }
+                        { LocalizationKey = "CSFFCardDetailTooltip.Usage", DefaultText = "Usage" }
                         : __instance.CardModel.UsageDurability.CardStatName,
                     __instance.CurrentUsageRate + (recipeStateChange?.UsageChange.x ?? 0), __instance,
                     cardModel.UsageDurability));
                 if (cardModel.UsageDurability.RatePerDaytimePoint != 0)
                     texts.Add(FormatRateEntry(cardModel.UsageDurability.RatePerDaytimePoint,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Base", DefaultText = "Base" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Base", DefaultText = "Base" }));
                 if (baseUsageRate.Count > 0)
                     texts.Add(baseUsageRate.Join(delimiter: "\n"));
                 if (__instance.IsCooking())
                     texts.Add(FormatRateEntry(cardModel.CookingConditions.ExtraUsageRate,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Cooking", DefaultText = "Cooking" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Cooking", DefaultText = "Cooking" }));
                 if (cardModel.LocalCounterEffects != null)
                     for (int i = 0; i < cardModel.LocalCounterEffects.Length; i++)
                         if (cardModel.LocalCounterEffects[i].IsActive(__instance))
@@ -460,10 +461,10 @@ namespace CstiDetailedCardProgress
                     graphicsM.CharacterWindow.HasCardEquipped(__instance))
                     texts.Add(FormatRateEntry(cardModel.UsageDurability.ExtraRateWhenEquipped,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Equipped", DefaultText = "Equipped" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Equipped", DefaultText = "Equipped" }));
                 if ((recipeStateChange?.UsageChange.x ?? 0) != 0)
                     texts.Add(FormatRateEntry(recipeStateChange?.UsageChange.x ?? 0,
-                        $"{new LocalizedString { LocalizationKey = "CstiDetailedCardProgress.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
+                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
             }
 
             if (cardModel.FuelCapacity &&
@@ -472,20 +473,20 @@ namespace CstiDetailedCardProgress
                 texts.Add(FormatProgressAndRate(__instance.CurrentFuel, cardModel.FuelCapacity.MaxValue,
                     string.IsNullOrEmpty(cardModel.FuelCapacity.CardStatName)
                         ? new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Fuel", DefaultText = "Fuel" }
+                        { LocalizationKey = "CSFFCardDetailTooltip.Fuel", DefaultText = "Fuel" }
                         : __instance.CardModel.FuelCapacity.CardStatName,
                     __instance.CurrentFuelRate + (recipeStateChange?.FuelChange.x ?? 0), __instance,
                     cardModel.FuelCapacity));
                 if (cardModel.FuelCapacity.RatePerDaytimePoint != 0)
                     texts.Add(FormatRateEntry(cardModel.FuelCapacity.RatePerDaytimePoint,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Base", DefaultText = "Base" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Base", DefaultText = "Base" }));
                 if (baseFuelRate.Count > 0)
                     texts.Add(baseFuelRate.Join(delimiter: "\n"));
                 if (__instance.IsCooking())
                     texts.Add(FormatRateEntry(cardModel.CookingConditions.ExtraFuelRate,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Cooking", DefaultText = "Cooking" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Cooking", DefaultText = "Cooking" }));
                 if (cardModel.LocalCounterEffects != null)
                     for (int i = 0; i < cardModel.LocalCounterEffects.Length; i++)
                         if (cardModel.LocalCounterEffects[i].IsActive(__instance))
@@ -495,10 +496,10 @@ namespace CstiDetailedCardProgress
                     graphicsM.CharacterWindow.HasCardEquipped(__instance))
                     texts.Add(FormatRateEntry(cardModel.FuelCapacity.ExtraRateWhenEquipped,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Equipped", DefaultText = "Equipped" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Equipped", DefaultText = "Equipped" }));
                 if ((recipeStateChange?.FuelChange.x ?? 0) != 0)
                     texts.Add(FormatRateEntry(recipeStateChange?.FuelChange.x ?? 0,
-                        $"{new LocalizedString { LocalizationKey = "CstiDetailedCardProgress.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
+                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
             }
 
             if (cardModel.Progress && cardModel.Progress.Show(__instance.ContainedLiquid, __instance.CurrentProgress))
@@ -506,20 +507,20 @@ namespace CstiDetailedCardProgress
                 texts.Add(FormatProgressAndRate(__instance.CurrentProgress, cardModel.Progress.MaxValue,
                     string.IsNullOrEmpty(cardModel.Progress.CardStatName)
                         ? new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Progress", DefaultText = "Progress" }
+                        { LocalizationKey = "CSFFCardDetailTooltip.Progress", DefaultText = "Progress" }
                         : __instance.CardModel.Progress.CardStatName,
                     __instance.CurrentConsumableRate + (recipeStateChange?.ChargesChange.x ?? 0), __instance,
                     cardModel.Progress));
                 if (cardModel.Progress.RatePerDaytimePoint != 0)
                     texts.Add(FormatRateEntry(cardModel.Progress.RatePerDaytimePoint,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Base", DefaultText = "Base" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Base", DefaultText = "Base" }));
                 if (baseConsumableRate.Count > 0)
                     texts.Add(baseConsumableRate.Join(delimiter: "\n"));
                 if (__instance.IsCooking())
                     texts.Add(FormatRateEntry(cardModel.CookingConditions.ExtraProgressRate,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Cooking", DefaultText = "Cooking" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Cooking", DefaultText = "Cooking" }));
                 if (cardModel.LocalCounterEffects != null)
                     for (int i = 0; i < cardModel.LocalCounterEffects.Length; i++)
                         if (cardModel.LocalCounterEffects[i].IsActive(__instance))
@@ -530,10 +531,10 @@ namespace CstiDetailedCardProgress
                     graphicsM.CharacterWindow.HasCardEquipped(__instance))
                     texts.Add(FormatRateEntry(cardModel.Progress.ExtraRateWhenEquipped,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Equipped", DefaultText = "Equipped" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Equipped", DefaultText = "Equipped" }));
                 if ((recipeStateChange?.ChargesChange.x ?? 0) != 0)
                     texts.Add(FormatRateEntry(recipeStateChange?.ChargesChange.x ?? 0,
-                        $"{new LocalizedString { LocalizationKey = "CstiDetailedCardProgress.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
+                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
             }
 
             if (__instance.IsLiquidContainer && __instance.ContainedLiquid)
@@ -544,7 +545,7 @@ namespace CstiDetailedCardProgress
                 if (cardModel.LiquidEvaporationRate != 0)
                     texts.Add(FormatRateEntry(cardModel.LiquidEvaporationRate,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Base", DefaultText = "Base" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Base", DefaultText = "Base" }));
                 ;
                 if (baseEvaporationRate.Count > 0)
                     texts.Add(baseEvaporationRate.Join(delimiter: "\n"));
@@ -554,10 +555,10 @@ namespace CstiDetailedCardProgress
                             !(__instance.CurrentProducedLiquids.get_Item(i).LiquidCard !=
                               __instance.ContainedLiquidModel))
                             texts.Add(FormatRateEntry(__instance.CurrentProducedLiquids.get_Item(i).Quantity.x,
-                                $"{new LocalizedString { LocalizationKey = "CstiDetailedCardProgress.Producing", DefaultText = "Producing" }.ToString()} {__instance.CurrentProducedLiquids.get_Item(i).LiquidCard.CardName.ToString()}"));
+                                $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Producing", DefaultText = "Producing" }.ToString()} {__instance.CurrentProducedLiquids.get_Item(i).LiquidCard.CardName.ToString()}"));
                 if ((recipeStateChange?.ModifyLiquid ?? false) && (recipeStateChange?.LiquidQuantityChange.x ?? 0) != 0)
                     texts.Add(FormatRateEntry(recipeStateChange?.LiquidQuantityChange.x ?? 0,
-                        $"{new LocalizedString { LocalizationKey = "CstiDetailedCardProgress.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
+                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
             }
 
             if (cardModel.SpecialDurability1 &&
@@ -572,13 +573,13 @@ namespace CstiDetailedCardProgress
                 if (cardModel.SpecialDurability1.RatePerDaytimePoint != 0)
                     texts.Add(FormatRateEntry(cardModel.SpecialDurability1.RatePerDaytimePoint,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Base", DefaultText = "Base" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Base", DefaultText = "Base" }));
                 if (baseSpecial1Rate.Count > 0)
                     texts.Add(baseSpecial1Rate.Join(delimiter: "\n"));
                 if (__instance.IsCooking())
                     texts.Add(FormatRateEntry(cardModel.CookingConditions.ExtraSpecial1Rate,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Cooking", DefaultText = "Cooking" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Cooking", DefaultText = "Cooking" }));
                 if (cardModel.LocalCounterEffects != null)
                     for (int i = 0; i < cardModel.LocalCounterEffects.Length; i++)
                         if (cardModel.LocalCounterEffects[i].IsActive(__instance))
@@ -588,10 +589,10 @@ namespace CstiDetailedCardProgress
                     graphicsM.CharacterWindow.HasCardEquipped(__instance))
                     texts.Add(FormatRateEntry(cardModel.SpecialDurability1.ExtraRateWhenEquipped,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Equipped", DefaultText = "Equipped" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Equipped", DefaultText = "Equipped" }));
                 if ((recipeStateChange?.Special1Change.x ?? 0) != 0)
                     texts.Add(FormatRateEntry(recipeStateChange?.Special1Change.x ?? 0,
-                        $"{new LocalizedString { LocalizationKey = "CstiDetailedCardProgress.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
+                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
             }
 
             if (cardModel.SpecialDurability2 &&
@@ -606,13 +607,13 @@ namespace CstiDetailedCardProgress
                 if (cardModel.SpecialDurability2.RatePerDaytimePoint != 0)
                     texts.Add(FormatRateEntry(cardModel.SpecialDurability2.RatePerDaytimePoint,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Base", DefaultText = "Base" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Base", DefaultText = "Base" }));
                 if (baseSpecial2Rate.Count > 0)
                     texts.Add(baseSpecial2Rate.Join(delimiter: "\n"));
                 if (__instance.IsCooking())
                     texts.Add(FormatRateEntry(cardModel.CookingConditions.ExtraSpecial2Rate,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Cooking", DefaultText = "Cooking" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Cooking", DefaultText = "Cooking" }));
                 if (cardModel.LocalCounterEffects != null)
                     for (int i = 0; i < cardModel.LocalCounterEffects.Length; i++)
                         if (cardModel.LocalCounterEffects[i].IsActive(__instance))
@@ -622,10 +623,10 @@ namespace CstiDetailedCardProgress
                     graphicsM.CharacterWindow.HasCardEquipped(__instance))
                     texts.Add(FormatRateEntry(cardModel.SpecialDurability2.ExtraRateWhenEquipped,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Equipped", DefaultText = "Equipped" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Equipped", DefaultText = "Equipped" }));
                 if ((recipeStateChange?.Special2Change.x ?? 0) != 0)
                     texts.Add(FormatRateEntry(recipeStateChange?.Special2Change.x ?? 0,
-                        $"{new LocalizedString { LocalizationKey = "CstiDetailedCardProgress.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
+                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
             }
 
             if (cardModel.SpecialDurability3 &&
@@ -640,13 +641,13 @@ namespace CstiDetailedCardProgress
                 if (cardModel.SpecialDurability3.RatePerDaytimePoint != 0)
                     texts.Add(FormatRateEntry(cardModel.SpecialDurability3.RatePerDaytimePoint,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Base", DefaultText = "Base" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Base", DefaultText = "Base" }));
                 if (baseSpecial3Rate.Count > 0)
                     texts.Add(baseSpecial3Rate.Join(delimiter: "\n"));
                 if (__instance.IsCooking())
                     texts.Add(FormatRateEntry(cardModel.CookingConditions.ExtraSpecial3Rate,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Cooking", DefaultText = "Cooking" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Cooking", DefaultText = "Cooking" }));
                 if (cardModel.LocalCounterEffects != null)
                     for (int i = 0; i < cardModel.LocalCounterEffects.Length; i++)
                         if (cardModel.LocalCounterEffects[i].IsActive(__instance))
@@ -656,10 +657,10 @@ namespace CstiDetailedCardProgress
                     graphicsM.CharacterWindow.HasCardEquipped(__instance))
                     texts.Add(FormatRateEntry(cardModel.SpecialDurability3.ExtraRateWhenEquipped,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Equipped", DefaultText = "Equipped" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Equipped", DefaultText = "Equipped" }));
                 if ((recipeStateChange?.Special3Change.x ?? 0) != 0)
                     texts.Add(FormatRateEntry(recipeStateChange?.Special3Change.x ?? 0,
-                        $"{new LocalizedString { LocalizationKey = "CstiDetailedCardProgress.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
+                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
             }
 
             if (cardModel.SpecialDurability4 &&
@@ -674,13 +675,13 @@ namespace CstiDetailedCardProgress
                 if (cardModel.SpecialDurability4.RatePerDaytimePoint != 0)
                     texts.Add(FormatRateEntry(cardModel.SpecialDurability4.RatePerDaytimePoint,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Base", DefaultText = "Base" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Base", DefaultText = "Base" }));
                 if (baseSpecial4Rate.Count > 0)
                     texts.Add(baseSpecial4Rate.Join(delimiter: "\n"));
                 if (__instance.IsCooking())
                     texts.Add(FormatRateEntry(cardModel.CookingConditions.ExtraSpecial4Rate,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Cooking", DefaultText = "Cooking" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Cooking", DefaultText = "Cooking" }));
                 if (cardModel.LocalCounterEffects != null)
                     for (int i = 0; i < cardModel.LocalCounterEffects.Length; i++)
                         if (cardModel.LocalCounterEffects[i].IsActive(__instance))
@@ -690,10 +691,10 @@ namespace CstiDetailedCardProgress
                     graphicsM.CharacterWindow.HasCardEquipped(__instance))
                     texts.Add(FormatRateEntry(cardModel.SpecialDurability4.ExtraRateWhenEquipped,
                         new LocalizedString
-                        { LocalizationKey = "CstiDetailedCardProgress.Equipped", DefaultText = "Equipped" }));
+                        { LocalizationKey = "CSFFCardDetailTooltip.Equipped", DefaultText = "Equipped" }));
                 if ((recipeStateChange?.Special4Change.x ?? 0) != 0)
                     texts.Add(FormatRateEntry(recipeStateChange?.Special4Change.x ?? 0,
-                        $"{new LocalizedString { LocalizationKey = "CstiDetailedCardProgress.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
+                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
             }
 
             if (cardModel.IsWeapon)

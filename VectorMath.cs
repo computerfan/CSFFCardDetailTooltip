@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace CstiDetailedCardProgress;
+namespace CSFFCardDetailTooltip;
 
 public static class VectorMath
 {

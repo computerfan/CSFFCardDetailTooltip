@@ -1,6 +1,6 @@
 ﻿using HarmonyLib;
 
-namespace CstiDetailedCardProgress;
+namespace CSFFCardDetailTooltip;
 
 internal class PrefabMod
 {

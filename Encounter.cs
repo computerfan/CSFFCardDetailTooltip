@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
-using static CstiDetailedCardProgress.Utils;
+using static CSFFCardDetailTooltip.Utils;
 
-namespace CstiDetailedCardProgress;
+namespace CSFFCardDetailTooltip;
 
 internal class Encounter
 {

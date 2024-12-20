@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CstiDetailedCardProgress;
+namespace CSFFCardDetailTooltip;
 
 internal class TooltipMod
 {

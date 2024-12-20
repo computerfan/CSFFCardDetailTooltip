@@ -3,3 +3,4 @@ obj/
 .vs/
 /Publish.ps1
 /CstiDetailedCardProgress.csproj.user
+Assembly/
