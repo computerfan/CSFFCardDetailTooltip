@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
 using UnityEngine;
@@ -25,6 +26,7 @@ internal class Action
         InspectionPopup popup = __instance.GetComponentInParent<InspectionPopup>();
         ExplorationPopup explorationPopup = __instance.GetComponentInParent<ExplorationPopup>();
         BlueprintConstructionPopup blueprintConstructionPopup = __instance.GetComponentInParent<BlueprintConstructionPopup>();
+        StatDetailsPopup statDetailsPopup = __instance.GetComponentInParent<StatDetailsPopup>();
 
         InGameCardBase currentCard = null;
         DismantleCardAction action = null;
@@ -94,12 +96,20 @@ internal class Action
             //        }));
             //}
         }
-        else if (popup & popup.CurrentSet)
+        else if (popup && popup.CurrentSet)
         {
             actionSet = popup.CurrentSet;
             if (actionSet.name == "TimeSkipOptions" && __instance.Index > -1 && __instance.Index < actionSet.Actions.Length)
             {
                 action = actionSet.Actions[__instance.Index];
+            }
+        }
+        else if (statDetailsPopup && statDetailsPopup.CurrentStatus != null)
+        {
+            GameStat currentStatus = statDetailsPopup.StatModel;
+            if (__instance.Index > -1 && __instance.Index < currentStatus.StatActions.Length)
+            {
+                action = currentStatus.StatActions[__instance.Index];
             }
         }
         if (action != null)
