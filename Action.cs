@@ -55,44 +55,44 @@ internal class Action
         {
             if (__instance.name == "Button" || explorationPopup.CurrentPhase != 0) return;
             currentCard = explorationPopup.ExplorationCard;
-            action = currentCard.CardModel?.DismantleActions.get_Item(0);
-            if (action != null)
-            {
-                if (currentCard.ExplorationData != null)
-                    texts.Add(FormatBasicEntry($"{currentCard.ExplorationData.CurrentExploration:P2}",
-                        new LocalizedString
-                        {
-                            LocalizationKey = "CSFFCardDetailTooltip.Action.CurrentExploration",
-                            DefaultText = "Current Exploration"
-                        }));
-                texts.Add(FormatBasicEntry(ColorFloat(action.ExplorationValue, true),
-                    new LocalizedString
-                    {
-                        LocalizationKey = "CSFFCardDetailTooltip.Action.ExplorationValue",
-                        DefaultText = "Explored"
-                    }));
-                currentCard.CardModel?.ExplorationResults?
-                    .Where(r => currentCard.ExplorationData.CurrentExploration < r.TriggerValue &&
-                                currentCard.ExplorationData.CurrentExploration + action.ExplorationValue >=
-                                r.TriggerValue)
-                    .Select(r => r.Action)
-                    .Do(exploreAction =>
-                    {
-                        texts.Add(FormatBasicEntry(exploreAction.ActionName, ""));
-                        string dropList = FormatCardDropList(
-                            gm.GetCollectionDropsReport(exploreAction, currentCard, null, false), currentCard,
-                            action: action, indent: 2);
-                        if (!string.IsNullOrWhiteSpace(dropList)) texts.Add(dropList);
-                        string actionText = FormatCardAction(exploreAction, currentCard, 2);
-                        if (!string.IsNullOrWhiteSpace(actionText)) texts.Add(actionText);
-                    });
-                texts.Add(FormatBasicEntry(FormatMinMaxValue(action.MinMaxExplorationDrops),
-                    new LocalizedString
-                    {
-                        LocalizationKey = "CSFFCardDetailTooltip.Action.ExplorationDropsCount",
-                        DefaultText = "Exploration Drops Count"
-                    }));
-            }
+            action = currentCard.DismantleActions[__instance.Index];
+            //if (action != null)
+            //{
+            //    if (currentCard.ExplorationData != null)
+            //        texts.Add(FormatBasicEntry($"{currentCard.ExplorationData.CurrentExploration:P2}",
+            //            new LocalizedString
+            //            {
+            //                LocalizationKey = "CSFFCardDetailTooltip.Action.CurrentExploration",
+            //                DefaultText = "Current Exploration"
+            //            }));
+            //    texts.Add(FormatBasicEntry(ColorFloat(action.ExplorationValue, true),
+            //        new LocalizedString
+            //        {
+            //            LocalizationKey = "CSFFCardDetailTooltip.Action.ExplorationValue",
+            //            DefaultText = "Explored"
+            //        }));
+            //    currentCard.CardModel?.ExplorationResults?
+            //        .Where(r => currentCard.ExplorationData.CurrentExploration < r.TriggerValue &&
+            //                    currentCard.ExplorationData.CurrentExploration + action.ExplorationValue >=
+            //                    r.TriggerValue)
+            //        .Select(r => r.Action)
+            //        .Do(exploreAction =>
+            //        {
+            //            texts.Add(FormatBasicEntry(exploreAction.ActionName, ""));
+            //            string dropList = FormatCardDropList(
+            //                gm.GetCollectionDropsReport(exploreAction, currentCard, null, false), currentCard,
+            //                action: action, indent: 2);
+            //            if (!string.IsNullOrWhiteSpace(dropList)) texts.Add(dropList);
+            //            string actionText = FormatCardAction(exploreAction, currentCard, 2);
+            //            if (!string.IsNullOrWhiteSpace(actionText)) texts.Add(actionText);
+            //        });
+            //    texts.Add(FormatBasicEntry(FormatMinMaxValue(action.MinMaxExplorationDrops),
+            //        new LocalizedString
+            //        {
+            //            LocalizationKey = "CSFFCardDetailTooltip.Action.ExplorationDropsCount",
+            //            DefaultText = "Exploration Drops Count"
+            //        }));
+            //}
         }
         else if (popup & popup.CurrentSet)
         {
