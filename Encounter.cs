@@ -16,10 +16,11 @@ internal class Encounter
         if (!Plugin.Enabled) return;
         EncounterPopup popup = __instance.GetComponentInParent<EncounterPopup>();
         if (popup == null) return;
-        int actionIndex = __instance.Index;
-        if (actionIndex < 0 || actionIndex > popup.GeneralPlayerActions.Length - 1) return;
+        //int actionIndex = __instance.Index;
+        //if (actionIndex < 0 || actionIndex > popup.GeneralPlayerActions.Length - 1) return;
         List<string> texts = new();
-        texts.Add(FormatEncounterPlayerAction(popup.GeneralPlayerActions[actionIndex], popup, actionIndex));
+        if(__instance.SubActions.Count == 1)
+            texts.Add(FormatEncounterPlayerAction(__instance.SubActions[0], popup));
 
         string newContent = texts.Join(delimiter: "\n");
         if (!string.IsNullOrWhiteSpace(newContent))

@@ -50,8 +50,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
     }
 #endif
 
-    public static string FormatEncounterPlayerAction(GenericEncounterPlayerAction action, EncounterPopup popup,
-        int actionIndex)
+    public static string FormatEncounterPlayerAction(GenericEncounterPlayerAction action, EncounterPopup popup, int indent = 0)
     {
         MeleeClashResultsReport backupCurrentRoundMeleeClashResult = popup.CurrentRoundMeleeClashResult;
         RangedClashResultReport backupCurrentRoundRangedClashResult = popup.CurrentRoundRangedClashResult;
@@ -71,98 +70,117 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         InGameEncounter encounter = popup.CurrentEncounter;
 
         StringBuilder summary = new($"<size=85%><color=yellow>{LcStr("CSFFCardDetailTooltip.Encounter.ActionPreview", "Action Preview")} {encounter.EnemyName}</color></size>\n");
-        summary.AppendLine($"{LcStr("CSFFCardDetailTooltip.Encounter.PlayerAction", "Player Action")}: {action.ActionName}");
+        summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.PlayerAction", "Player Action"), action.ActionName, indent: indent + 2));
+        summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.ActionType", "Action Type"), action.ActionType.ToString(), indent: indent + 2));
+        summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.ActionRange", "Action Range"), action.ActionRange.ToString(), indent: indent + 2));
+        summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.ActionSuccessChance", "Action Success Chance"), $"{num * 100f:0.##}%", indent: indent + 2));
+
         if (action.ActionRange == ActionRange.Melee)
         {
             float playerSuccess = currentRoundMeleeClashResult.PlayerSuccessChance;
             float enemySuccess = currentRoundMeleeClashResult.EnemySuccessChance;
-            summary.AppendLine($" {LcStr("CSFFCardDetailTooltip.Encounter.PowerComparison", "Power Comparison")}: {currentRoundMeleeClashResult.CommonClashReport.PlayerClashValue:0.#} : {currentRoundMeleeClashResult.CommonClashReport.EnemyClashValue:0.#}");
-            summary.AppendLine($" {LcStr("CSFFCardDetailTooltip.Encounter.PlayerAttackHitRate", "Player Attack Hit Rate")}: {playerSuccess * 100f:0.##}%{(commonClashResult.PlayerCannotFail ? $" <color=green>({LcStr("CSFFCardDetailTooltip.Encounter.GuaranteedHit", "Guaranteed Hit")})</color>" : "")}");
-            summary.AppendLine($" {LcStr("CSFFCardDetailTooltip.Encounter.EnemyAttackHitRate", "Enemy Attack Hit Rate")}: {enemySuccess * 100f:0.##}%{(commonClashResult.EnemyCannotFail ? $" <color=red>({LcStr("CSFFCardDetailTooltip.Encounter.GuaranteedHit", "Guaranteed Hit")})</color>" : "")}");
+            summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.PowerComparison", "Power Comparison"), $"{currentRoundMeleeClashResult.CommonClashReport.PlayerClashValue:0.#} : {currentRoundMeleeClashResult.CommonClashReport.EnemyClashValue:0.#}", indent: indent + 2));
+            summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.PlayerAttackHitRate", "Player Attack Hit Rate"), $"{playerSuccess * 100f:0.##}%{(commonClashResult.PlayerCannotFail ? $" <color=green>({LcStr("CSFFCardDetailTooltip.Encounter.GuaranteedHit", "Guaranteed Hit")})</color>" : "")}", indent: indent + 2));
+            summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.EnemyAttackHitRate", "Enemy Attack Hit Rate"), $"{enemySuccess * 100f:0.##}%{(commonClashResult.EnemyCannotFail ? $" <color=red>({LcStr("CSFFCardDetailTooltip.Encounter.GuaranteedHit", "Guaranteed Hit")})</color>" : "")}", indent: indent + 2));
             if (action.AssociatedCard)
+            {
                 foreach (PlayerEncounterVariable stat in action.AssociatedCard.CardModel.WeaponClashStatInfluences)
-                    summary.AppendLine($"  {stat.Stat.GameName.ToString()}: {FormatMinMaxValue(stat.GenerateRandomRange())}");
+                {
+                    summary.AppendLine(FormatBasicEntry(FormatMinMaxValue(stat.GenerateRandomRange()), stat.Stat.GameName.ToString(), indent: indent + 2));
+                }
+            }
             if (!action.DoesNotAttack)
             {
                 Vector2 damage = action.InitialDamage;
                 Vector2 damageStatSum = action.DamageStatSum;
                 Vector2 sizeDamage = new(popup.PlayerSize, popup.PlayerSize);
 
-                summary.AppendLine($" {LcStr("CSFFCardDetailTooltip.Encounter.DamagePower", "Damage Power")}: {FormatMinMaxValue(damage)}");
-                summary.AppendLine($" {LcStr("CSFFCardDetailTooltip.Encounter.StatusDamageBonus", "Status Damage Bonus")}: {FormatMinMaxValue(damageStatSum)}");
+                summary.AppendLine(FormatBasicEntry(FormatMinMaxValue(damage), LcStr("CSFFCardDetailTooltip.Encounter.DamagePower", "Damage Power"), indent: indent + 2));
+                summary.AppendLine(FormatBasicEntry(FormatMinMaxValue(damageStatSum), LcStr("CSFFCardDetailTooltip.Encounter.StatusDamageBonus", "Status Damage Bonus"), indent: indent + 2));
                 if (action.AssociatedCard)
+                {
                     foreach (PlayerEncounterVariable stat in action.AssociatedCard.CardModel.WeaponDamageStatInfluences)
-                        summary.AppendLine($"  {stat.Stat.GameName.ToString()}: {FormatMinMaxValue(stat.GenerateRandomRange())}");
-                summary.AppendLine($" {LcStr("CSFFCardDetailTooltip.Encounter.MeleeSizeDamageBonus", "Melee Size Damage Bonus")}: {ColorFloat(popup.PlayerSize)}");
-                summary.AppendLine($" {LcStr("CSFFCardDetailTooltip.Encounter.DamageType", "Damage Type")}: {action.DamageTypes.Select(t => t.Name.ToString()).Join()}");
+                    {
+                        summary.AppendLine(FormatBasicEntry(FormatMinMaxValue(stat.GenerateRandomRange()), stat.Stat.GameName.ToString(), indent: indent + 2));
+                    }
+                }
+                summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.MeleeSizeDamageBonus", "Melee Size Damage Bonus"), ColorFloat(popup.PlayerSize), indent: indent + 2));
+                summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.DamageType", "Damage Type"), action.DamageTypes.Select(t => t.Name.ToString()).Join(), indent: indent + 2));
                 EncounterPlayerDamageReport damageReport = new()
                 {
                     SizeDefense = encounter.CurrentEnemySize
                 };
 
-                summary.AppendLine($" {LcStr("CSFFCardDetailTooltip.Encounter.HitableParts", "Hitable Parts")}:")
+                summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.HitableParts", "Hitable Parts"), ""))
                     .AppendLine(
                         $"{FormatPlayerHitResult(encounter, action, popup, damage + damageStatSum + sizeDamage)}");
             }
 
-            summary.AppendLine($" {LcStr("CSFFCardDetailTooltip.Encounter.DistanceChange", "Distance Change")}: {GetDistanceChangeText(action.PreClashDistanceChange)}");
+            summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.DistanceChange", "Distance Change"), GetDistanceChangeText(action.PreClashDistanceChange), indent: indent + 2));
         }
         else if (action.ActionRange == ActionRange.Ranged)
         {
             if (encounter.Distant)
             {
-                summary.AppendLine(
-                    $" {LcStr("CSFFCardDetailTooltip.Encounter.PowerComparison", "Power Comparison")}: {currentRoundRangedClashResult.PlayerClashValue:0.#} : {currentRoundRangedClashResult.EnemyClashValue:0.#}");
+                summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.PowerComparison", "Power Comparison"), $"{currentRoundRangedClashResult.PlayerClashValue:0.#} : {currentRoundRangedClashResult.EnemyClashValue:0.#}", indent: indent + 2));
 
                 float playerSuccess = currentRoundRangedClashResult.PlayerSuccessChance;
                 float enemySuccess = currentRoundRangedClashResult.EnemySuccessChance;
-                // Debug.Log($"Inaccuracy: {action.ClashInaccuracy}");
-                summary.AppendLine($"{LcStr("CSFFCardDetailTooltip.Encounter.PlayerHitRate", "Player Hit Rate")}: {playerSuccess * 100f:0.##}%");
-                summary.AppendLine($"{LcStr("CSFFCardDetailTooltip.Encounter.EnemyHitRate", "Enemy Hit Rate")}: {enemySuccess * 100f:0.##}%");
+                summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.PlayerHitRate", "Player Hit Rate"), $"{playerSuccess * 100f:0.##}%", indent: indent + 2));
+                summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.EnemyHitRate", "Enemy Hit Rate"), $"{enemySuccess * 100f:0.##}%", indent: indent + 2));
             }
             else
             {
-                summary.AppendLine(
-                    $" {LcStr("CSFFCardDetailTooltip.Encounter.PowerComparison", "Power Comparison")}: {currentRoundMeleeClashResult.CommonClashReport.PlayerClashValue:0.#} : {currentRoundMeleeClashResult.CommonClashReport.EnemyClashValue:0.#}");
+                summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.PowerComparison", "Power Comparison"), $"{currentRoundMeleeClashResult.CommonClashReport.PlayerClashValue:0.#} : {currentRoundMeleeClashResult.CommonClashReport.EnemyClashValue:0.#}", indent: indent + 2));
 
                 float playerSuccess = currentRoundMeleeClashResult.PlayerSuccessChance;
                 float enemySuccess = currentRoundMeleeClashResult.EnemySuccessChance;
 
-                summary.AppendLine($"{LcStr("CSFFCardDetailTooltip.Encounter.PlayerHitRate", "Player Hit Rate")}: {playerSuccess * 100f:0.##}%");
-                summary.AppendLine($"{LcStr("CSFFCardDetailTooltip.Encounter.EnemyHitRate", "Enemy Hit Rate")}: {enemySuccess * 100f:0.##}%");
+                summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.PlayerHitRate", "Player Hit Rate"), $"{playerSuccess * 100f:0.##}%", indent: indent + 2));
+                summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.EnemyHitRate", "Enemy Hit Rate"), $"{enemySuccess * 100f:0.##}%", indent: indent + 2));
             }
 
             Vector2 damage = action.InitialDamage;
             Vector2 damageStatSum = action.DamageStatSum;
             if (!action.DoesNotAttack)
             {
-                summary.AppendLine($" {LcStr("CSFFCardDetailTooltip.Encounter.BasicDamagePower", "Basic Damage Power")}: {FormatMinMaxValue(damage)}");
-                summary.AppendLine($" {LcStr("CSFFCardDetailTooltip.Encounter.StatusDamageBonus", "Status Damage Bonus")}: {FormatMinMaxValue(damageStatSum)}");
+                summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.BasicDamagePower", "Basic Damage Power"), FormatMinMaxValue(damage), indent: indent + 2));
+                summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.StatusDamageBonus", "Status Damage Bonus"), FormatMinMaxValue(damageStatSum), indent: indent + 2));
                 if (action.AssociatedCard)
+                {
                     foreach (PlayerEncounterVariable stat in action.AssociatedCard.CardModel.WeaponDamageStatInfluences)
-                        summary.AppendLine($"  {stat.Stat.GameName.ToString()}: {FormatMinMaxValue(stat.GenerateRandomRange())}");
+                    {
+                        summary.AppendLine(FormatBasicEntry(stat.Stat.GameName.ToString(), FormatMinMaxValue(stat.GenerateRandomRange()), indent: indent + 2));
+                    }
+                }
                 if (action.AmmoCard)
+                {
                     foreach (PlayerEncounterVariable stat in action.AmmoCard.CardModel.WeaponDamageStatInfluences)
-                        summary.AppendLine($"  {stat.Stat.GameName.ToString()}: {FormatMinMaxValue(stat.GenerateRandomRange())}");
-                summary.AppendLine($" {LcStr("CSFFCardDetailTooltip.Encounter.DamageTypes", "Damage Types")}: {action.DamageTypes.Select(t => t.Name.ToString()).Join()}");
-                summary.AppendLine($" {LcStr("CSFFCardDetailTooltip.Encounter.HitableParts", "Hitable Parts")}:")
+                    {
+                        summary.AppendLine(FormatBasicEntry(stat.Stat.GameName.ToString(), FormatMinMaxValue(stat.GenerateRandomRange()), indent: indent + 2));
+                    }
+                }
+                summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.DamageTypes", "Damage Types"), action.DamageTypes.Select(t => t.Name.ToString()).Join(), indent: indent + 2));
+                summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.HitableParts", "Hitable Parts"), ""))
                     .AppendLine($"{FormatPlayerHitResult(encounter, action, popup, damage + damageStatSum)}");
             }
 
-            summary.AppendLine($" {LcStr("CSFFCardDetailTooltip.Encounter.DistanceChange", "Distance Change")}: {GetDistanceChangeText(action.PreClashDistanceChange)}");
+            summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.DistanceChange", "Distance Change"), GetDistanceChangeText(action.PreClashDistanceChange), indent: indent + 2));
         }
 
-        summary.AppendLine($"{LcStr("CSFFCardDetailTooltip.Encounter.CurrentEnemyStatus", "Current Enemy Status")}:")
-            .AppendLine($" {LcStr("CSFFCardDetailTooltip.Encounter.Health", "Health")}: {encounter.CurrentEnemyBlood}")
-            .AppendLine($" {LcStr("CSFFCardDetailTooltip.Encounter.Courage", "Courage")}: {encounter.CurrentEnemyMorale}")
-            .AppendLine($" {LcStr("CSFFCardDetailTooltip.Encounter.Stamina", "Stamina")}: {encounter.CurrentEnemyStamina}")
-            .AppendLine($" {LcStr("CSFFCardDetailTooltip.Encounter.MeleeSkill", "Melee Skill")}: {encounter.CurrentEnemyMeleeSkill}")
-            .AppendLine($" {LcStr("CSFFCardDetailTooltip.Encounter.RangedSkill", "Ranged Skill")}: {encounter.CurrentEnemyRangedSkill}")
-            .AppendLine($" {LcStr("CSFFCardDetailTooltip.Encounter.Stealth", "Stealth")}: {encounter.CurrentEnemyStealth}");
+        summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.CurrentEnemyStatus", "Current Enemy Status"), ""))
+            .AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.Health", "Health"), encounter.CurrentEnemyBlood.ToString(), indent: indent + 2))
+            .AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.Courage", "Courage"), encounter.CurrentEnemyMorale.ToString(), indent: indent + 2))
+            .AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.Stamina", "Stamina"), encounter.CurrentEnemyStamina.ToString(), indent: indent + 2))
+            .AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.MeleeSkill", "Melee Skill"), encounter.CurrentEnemyMeleeSkill.ToString(), indent: indent + 2))
+            .AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.RangedSkill", "Ranged Skill"), encounter.CurrentEnemyRangedSkill.ToString(), indent: indent + 2))
+            .AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.Stealth", "Stealth"), encounter.CurrentEnemyStealth.ToString(), indent: indent + 2));
 
-        summary.AppendLine($"{LcStr("CSFFCardDetailTooltip.Encounter.PowerDetailedData", "Power Detailed Data")}:\n{FormatPlayerClashValue(encounter, action, popup)}");
+        summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.PowerDetailedData", "Power Detailed Data"), ""))
+            .AppendLine($"{FormatPlayerClashValue(encounter, action, popup)}");
         return summary.ToString();
     }
+
 
     public static EnemyActionSelectionReport GenEnemyActionSelection(InGameEncounter _FromEncounter,
         List<EnemyAction> _ActionsList)
