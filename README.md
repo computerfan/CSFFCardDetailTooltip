@@ -1,4 +1,4 @@
-# Detailed Card Progress - Card Survival Tropical Island
+# Card Detail Tooltip - Card Survival Fantasy Forest
 
 This mod shows card status and progress related details in tooltip.
 
@@ -14,13 +14,13 @@ See <https://docs.bepinex.dev/v5.4.21/articles/user_guide/installation/index.htm
 
 ## Mod Setup
 
-- Download latest release from <https://github.com/computerfan/CstiDetailedCardProgress/releases>. 
+- Download latest release from <https://github.com/computerfan/CSFFCardDetailTooltip/releases>. 
 
-- Extract `CstiDetailedCardProgress.dll` to `BepInEx/plugins folder`.
+- Extract `CSFFDetailedCardProgress.dll` to `BepInEx/plugins folder`.
 
 ## Settings (Optional)
 
-The configuration file can be found at /BepInEx/config/CstiDetailedCardProgress.cfg
+The configuration file can be found at /BepInEx/config/CSFFCardDetailTooltip.cfg
 
 |Name|Default|Description|
 |--|--|--|
@@ -36,7 +36,18 @@ The configuration file can be found at /BepInEx/config/CstiDetailedCardProgress.
 
 __Toggle Note__: When using the hotkey to enable/disable the detailed tooltips, the tooltips will not be updated until the user moves the mouse off of a card.
 
+# Known Issues
+
+- Weather card will not show details even if WeatherCardInspectable is set to true.
+- Not fully adapted to the new CSFF combat system.
+- May be some typographical issues.
+
 # Change Log
+
+## 1.0.0
+- Update for CSFF
+
+# Change Log (CSTI)
 
 ## 1.0.2
 - Now it shows detailed weight of items and stats of character.
