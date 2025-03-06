@@ -193,7 +193,7 @@ namespace CSFFCardDetailTooltip
                         : __instance;
                 if (action.ProducedCards != null)
                 {
-                    CollectionDropReport dropReport = gm.GetCollectionDropsReport(action, currentCard, null, true);
+                    CollectionDropReport dropReport = gm.GetCollectionDropsReport(action, currentCard, droppedCard, true);
                     texts.Add(Action.FormatCardDropList(dropReport, currentCard, action: action));
                 }
 
