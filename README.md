@@ -47,6 +47,9 @@ __Toggle Note__: When using the hotkey to enable/disable the detailed tooltips, 
 ## 1.0.0
 - Update for CSFF
 
+## 1.0.1
+- Fishing should now provide the correct chance report.
+
 # Change Log (CSTI)
 
 ## 1.0.2
