@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using HarmonyLib;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace CSFFCardDetailTooltip;
 
@@ -49,6 +50,148 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         return list[index];
     }
 #endif
+
+    public static string FormatExtraDurabilityChanges(ExtraDurabilityChange[] changes, float multiplier = 1f,
+        int indent = 0)
+    {
+        if (changes == null || changes.Length == 0)
+            return string.Empty;
+
+        List<string> tooltipTexts = new();
+
+        foreach (ExtraDurabilityChange change in changes)
+        {
+            if (change == null) continue;
+
+            tooltipTexts.Add(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.DurabilityChange.AppliesTo", "Applies To"),
+                change.AppliesTo.ToString(), indent: indent));
+
+            // Target Range Information
+            if (change.AppliesToAllCards(false))
+            {
+                tooltipTexts.Add(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.DurabilityChange.Target", "Target"),
+                    LcStr("CSFFCardDetailTooltip.DurabilityChange.AllCards", "All Cards"), indent: indent + 2));
+            }
+            else
+            {
+                if (change.AffectedCards != null && change.AffectedCards.Count > 0)
+                {
+                    List<string> cardNames = change.AffectedCards.Select(card => card.CardName.ToString()).ToList();
+
+                    tooltipTexts.Add(FormatBasicEntry(
+                        LcStr("CSFFCardDetailTooltip.DurabilityChange.AffectedCards", "Affected Cards"),
+                        string.Join(", ", cardNames), indent: indent + 2));
+                }
+
+                if (change.AffectedTags != null && change.AffectedTags.Length > 0)
+                {
+                    tooltipTexts.Add(FormatBasicEntry(
+                        LcStr("CSFFCardDetailTooltip.DurabilityChange.AffectedTags", "Affected Tags"),
+                        string.Join(", ", change.AffectedTags as object[]), indent: indent + 2));
+                }
+            }
+
+            // Search Settings
+            if (change.LookInInventories)
+            {
+                tooltipTexts.Add(FormatBasicEntry(
+                    LcStr("CSFFCardDetailTooltip.DurabilityChange.LookInInventories", "Look In Inventories"),
+                    LcStr("CSFFCardDetailTooltip.Common.Yes", "Yes"), indent: indent + 2));
+            }
+
+            // Equipment Card Settings
+            if (change.IncludeEquippedCards)
+            {
+                tooltipTexts.Add(FormatBasicEntry(
+                    LcStr("CSFFCardDetailTooltip.DurabilityChange.IncludeEquipped", "Include Equipped"),
+                    LcStr("CSFFCardDetailTooltip.Common.Yes", "Yes"), indent: indent + 2));
+            }
+
+            // Random Card Affect Information
+            if (change.RandomlyAffectedCards > 0f)
+            {
+                tooltipTexts.Add(FormatBasicEntry(
+                    LcStr("CSFFCardDetailTooltip.DurabilityChange.RandomlyAffected", "Random Affect Count"),
+                    change.RandomlyAffectedCards.ToString(), indent: indent + 2));
+                tooltipTexts.Add(FormatBasicEntry(
+                    LcStr("CSFFCardDetailTooltip.DurabilityChange.RandomAmountType", "Random Type"),
+                    change.RandomAmountType.ToString(), indent: indent + 2));
+            }
+
+            // Card State Changes
+            if (change.CardChanges == RemoteCardStateChanges.Destroy)
+            {
+                tooltipTexts.Add(FormatBasicEntry(
+                    LcStr("CSFFCardDetailTooltip.DurabilityChange.CardChanges", "Card Changes"),
+                    LcStr("CSFFCardDetailTooltip.DurabilityChange.Destroy", "Destroy"), indent: indent + 2));
+
+                if (change.DropOnDestroyList)
+                {
+                    tooltipTexts.Add(FormatBasicEntry(
+                        LcStr("CSFFCardDetailTooltip.DurabilityChange.DropOnDestroy", "Drop On Destroy"),
+                        change.DropOnDestroyList + " " + LcStr("CSFFCardDetailTooltip.Common.Items", "Items"),
+                        indent: indent + 2));
+                }
+
+                if (change.CanSendToEnvironment && change.SendToEnvironment != null &&
+                    change.SendToEnvironment.Length > 0)
+                {
+                    tooltipTexts.Add(FormatBasicEntry(
+                        LcStr("CSFFCardDetailTooltip.DurabilityChange.SendToEnvironment", "Send To Environment"),
+                        LcStr("CSFFCardDetailTooltip.Common.Yes", "Yes"), indent: indent + 2));
+                }
+            }
+            else
+            {
+                // Durability Changes
+                ExtraDurabilityChange multipliedChanges = change * multiplier;
+
+                if (!Vector2Approximately(multipliedChanges.SpoilageChange, Vector2.zero))
+                    tooltipTexts.Add(FormatBasicEntry(FormatMinMaxValue(multipliedChanges.SpoilageChange),
+                        LcStr("CSFFCardDetailTooltip.Spoilage", "Spoilage"), indent: indent + 2));
+
+                if (!Vector2Approximately(multipliedChanges.UsageChange, Vector2.zero))
+                    tooltipTexts.Add(FormatBasicEntry(FormatMinMaxValue(multipliedChanges.UsageChange),
+                        LcStr("CSFFCardDetailTooltip.Usage", "Usage"), indent: indent + 2));
+
+                if (!Vector2Approximately(multipliedChanges.FuelChange, Vector2.zero))
+                    tooltipTexts.Add(FormatBasicEntry(FormatMinMaxValue(multipliedChanges.FuelChange),
+                        LcStr("CSFFCardDetailTooltip.Fuel", "Fuel"), indent: indent + 2));
+
+                if (!Vector2Approximately(multipliedChanges.ChargesChange, Vector2.zero))
+                    tooltipTexts.Add(FormatBasicEntry(FormatMinMaxValue(multipliedChanges.ChargesChange),
+                        LcStr("CSFFCardDetailTooltip.Charges", "Charges"), indent: indent + 2));
+
+                if (!Vector2Approximately(multipliedChanges.LiquidChange, Vector2.zero))
+                    tooltipTexts.Add(FormatBasicEntry(FormatMinMaxValue(multipliedChanges.LiquidChange),
+                        LcStr("CSFFCardDetailTooltip.LiquidChange", "Liquid Change"), indent: indent + 2));
+
+                if (!Vector2Approximately(multipliedChanges.Special1Change, Vector2.zero))
+                    tooltipTexts.Add(FormatBasicEntry(FormatMinMaxValue(multipliedChanges.Special1Change),
+                        LcStr("CSFFCardDetailTooltip.Special1Change", "Special1 Change"), indent: indent + 2));
+
+                if (!Vector2Approximately(multipliedChanges.Special2Change, Vector2.zero))
+                    tooltipTexts.Add(FormatBasicEntry(FormatMinMaxValue(multipliedChanges.Special2Change),
+                        LcStr("CSFFCardDetailTooltip.Special2Change", "Special2 Change"), indent: indent + 2));
+
+                if (!Vector2Approximately(multipliedChanges.Special3Change, Vector2.zero))
+                    tooltipTexts.Add(FormatBasicEntry(FormatMinMaxValue(multipliedChanges.Special3Change),
+                        LcStr("CSFFCardDetailTooltip.Special3Change", "Special3 Change"), indent: indent + 2));
+                if (!Vector2Approximately(multipliedChanges.Special4Change, Vector2.zero))
+                    tooltipTexts.Add(FormatBasicEntry(FormatMinMaxValue(multipliedChanges.Special4Change),
+                        LcStr("CSFFCardDetailTooltip.Special4Change", "Special4 Change"), indent: indent + 2));
+            }
+        }
+
+        return string.Join("\n", tooltipTexts);
+    }
+
+
+    private static bool Vector2Approximately(Vector2 a, Vector2 b)
+    {
+        return Mathf.Approximately(a.x, b.x) && Mathf.Approximately(a.y, b.y);
+    }
+
 
     public static string FormatEncounterPlayerAction(GenericEncounterPlayerAction action, EncounterPopup popup, int indent = 0)
     {
@@ -703,6 +846,9 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
                 "", indent: indent));
             texts.Add(cardModText);
         }
+
+        if (action.ExtraDurabilityModifications?.Length != 0)
+            texts.Add(FormatExtraDurabilityChanges(action.ExtraDurabilityModifications));
 
         return texts.Join(delimiter: "\n");
     }
