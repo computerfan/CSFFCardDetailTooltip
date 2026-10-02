@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -133,7 +133,8 @@ internal class Action
         else if (statDetailsPopup && statDetailsPopup.CurrentStatus != null)
         {
             GameStat currentStatus = statDetailsPopup.StatModel;
-            if (__instance.Index > -1 && __instance.Index < currentStatus.StatActions.Length)
+            if (currentStatus && currentStatus.StatActions != null &&
+                __instance.Index > -1 && __instance.Index < currentStatus.StatActions.Length)
             {
                 action = currentStatus.StatActions[__instance.Index];
             }
@@ -150,7 +151,7 @@ internal class Action
             texts.Add(FormatCardAction(action, currentCard));
         }
 
-        string newContent = texts.Join(delimiter: "\n");
+        string newContent = JoinTooltipLines(texts);
         if (!string.IsNullOrWhiteSpace(newContent))
         {
             ActionTooltip.TooltipTitle = __instance.Title;
@@ -276,10 +277,8 @@ internal class Action
 
             if (report.DropsInfo[i].StatMods != null)
             {
-                List<string> stateModTexts = new();
-                foreach (StatModifier statModifier in report.DropsInfo[i].StatMods)
-                    stateModTexts.Add(FormatStatModifier(statModifier, 4 + indent));
-                if (stateModTexts.Count > 0)
+                string stateModText = StatModifierPreview.Format(report.DropsInfo[i].StatMods, 4 + indent);
+                if (!string.IsNullOrWhiteSpace(stateModText))
                 {
                     texts.Add(FormatBasicEntry(
                         new LocalizedString
@@ -287,11 +286,11 @@ internal class Action
                             LocalizationKey = "CSFFCardDetailTooltip.StatModifier",
                             DefaultText = "Stat Modifier"
                         }, "", indent: 2 + indent));
-                    texts.Add(stateModTexts.Join(delimiter: "\n"));
+                    texts.Add(stateModText);
                 }
             }
         }
 
-        return $"{texts.Join(delimiter: "\n")}";
+        return JoinTooltipLines(texts);
     }
 }

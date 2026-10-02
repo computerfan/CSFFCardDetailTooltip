@@ -10,6 +10,12 @@ namespace CSFFCardDetailTooltip;
 
 public static class Utils
 {
+    public static string JoinTooltipLines(IEnumerable<string> sections)
+    {
+        return string.Join("\n", sections.Where(s => !string.IsNullOrWhiteSpace(s))
+            .SelectMany(s => s.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+            .Where(s => !string.IsNullOrWhiteSpace(s)));
+    }
     public static string LcStr(string key, string defaultText = null)
     {
         if (LocalizationManager.CurrentTexts != null && LocalizationManager.CurrentTexts.TryGetValue(key, out string value))
@@ -483,7 +489,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
                 "<size=55%>" + liquidDropText + "</size>", indent: indent));
         }
 
-        return texts.Join(delimiter: "\n");
+        return JoinTooltipLines(texts);
     }
 
     public static string FormatCardAction(CardAction action, InGameCardBase fromCard, int indent = 0,
@@ -496,7 +502,6 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         InGameCardBase givenCard)
     {
         List<string> texts = new();
-        List<string> stateModTexts = new();
 
         string timeModText = FormatTimeCostModifiers(action, fromCard, givenCard, indent);
         if (!timeModText.IsNullOrWhiteSpace())
@@ -509,25 +514,22 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
             texts.Add(timeModText);
         }
 
-        if (action.AllStatModifiers != null)
+        string stateModText = StatModifierPreview.Format(action.AllStatModifiers, indent + 2);
+        if (!string.IsNullOrWhiteSpace(stateModText))
         {
-            foreach (StatModifier statModifier in action.AllStatModifiers)
-                stateModTexts.Add(FormatStatModifier(statModifier, indent + 2));
-            if (stateModTexts.Count > 0)
-            {
-                texts.Add(FormatBasicEntry(
-                    new LocalizedString
-                    { LocalizationKey = "CSFFCardDetailTooltip.StatModifier", DefaultText = "Stat Modifier" }
-                        .ToString(),
-                    "", indent: indent));
-                texts.Add(stateModTexts.Join(delimiter: "\n"));
-            }
+            texts.Add(FormatBasicEntry(
+                new LocalizedString
+                { LocalizationKey = "CSFFCardDetailTooltip.StatModifier", DefaultText = "Stat Modifier" }
+                    .ToString(),
+                "", indent: indent));
+            texts.Add(stateModText);
         }
 
-        if (action.AllTemporaryStatModifiers != null && action.AllTemporaryStatModifiers.Count > 0)
+        string temporaryText = StatModifierPreview.Format(action.AllTemporaryStatModifiers, indent + 2);
+        if (!string.IsNullOrWhiteSpace(temporaryText))
         {
             texts.Add(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.DuringAction", "During this action only"), "", indent: indent));
-            texts.Add(string.Join("\n", action.AllTemporaryStatModifiers.Select(m => FormatStatModifier(m, indent + 2))));
+            texts.Add(temporaryText);
         }
 
         if (action.AllNPCStatModifiers != null)
@@ -554,7 +556,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
             texts.Add(cardModText);
         }
 
-        return texts.Join(delimiter: "\n");
+        return JoinTooltipLines(texts);
     }
 
     private static string FormatAddedDurabilities(TransferedDurabilities added, InGameCardBase card, int indent)
@@ -562,8 +564,10 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         if (!card || added == null || added.IsEmpty) return string.Empty;
         CardStateChange change = new() { ModType = CardModifications.DurabilityChanges };
         change.ApplyDurabilityChanges(added);
+        string changes = FormatStateChange(change, card, indent);
+        if (string.IsNullOrWhiteSpace(changes)) return string.Empty;
         return "\n" + FormatBasicEntry(LcStr("CSFFCardDetailTooltip.AdditionalDurabilityChanges", "Additional durability changes"), "", indent: indent)
-               + "\n" + FormatStateChange(change, card, indent);
+               + "\n" + changes;
     }
 
     private static string FormatTimeCostModifiers(CardAction action, InGameCardBase _ReceivingCard,
@@ -627,7 +631,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         texts.Add(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.FinalDuration", "Final duration"),
             HoursDisplay.HoursToCompleteString(GameManager.TickToHours(action.TotalDaytimeCost, action.MiniTicksCost)), indent: indent + 2));
 
-        return texts.Join(delimiter: "\n");
+        return JoinTooltipLines(texts);
     }
 
     private static string FormatStateChange(CardStateChange stateChange, InGameCardBase fromCard, int indent = 0)
@@ -716,7 +720,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
                 FormatMinMaxValue(stateChange.LiquidQuantityChange), fromCard.ContainedLiquidModel.CardName, indent: indent + 4));
         }
 
-        return cardModTexts.Join(delimiter: "\n");
+        return JoinTooltipLines(cardModTexts);
     }
     public static string FormatActionDurationModifiers(ActionModifier modifier, int indent = 0)
     {
@@ -726,31 +730,11 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         {
             if (tag) texts.Add(FormatBasicEntry(tag.name, ColorFloat(modifier.DurationModifier), indent: indent));
         }
-        return texts.Join(delimiter: "\n");
+        return JoinTooltipLines(texts);
     }
     public static string FormatStatModifier(StatModifier statModifier, int indent = 0)
     {
-        List<string> texts = new();
-        if (statModifier.Stat != null)
-        {
-            if (statModifier.ValueModifier.magnitude != 0)
-                texts.Add(FormatBasicEntry($"{FormatMinMaxValue(statModifier.ValueModifier)}",
-                    $"{statModifier.Stat.GameName.ToString()}", indent: indent));
-            if (statModifier.RateModifier.magnitude != 0)
-                texts.Add(FormatBasicEntry($"{FormatMinMaxValue(statModifier.RateModifier)}",
-                    $"{statModifier.Stat.GameName.ToString()} {new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Rate", DefaultText = "Rate" }.ToString()}",
-                    indent: indent));
-            if (statModifier.MinValueModifier != Vector2.zero)
-                texts.Add(FormatBasicEntry(FormatMinMaxValue(statModifier.MinValueModifier),
-                    $"{statModifier.Stat.GameName} ({LcStr("CSFFCardDetailTooltip.Minimum", "Minimum")})", indent: indent));
-            if (statModifier.MaxValueModifier != Vector2.zero)
-                texts.Add(FormatBasicEntry(FormatMinMaxValue(statModifier.MaxValueModifier),
-                    $"{statModifier.Stat.GameName} ({LcStr("CSFFCardDetailTooltip.Maximum", "Maximum")})", indent: indent));
-            if (statModifier.ApplyEachTick && texts.Count > 0)
-                texts.Add(LcStr("CSFFCardDetailTooltip.PerTick", "Per action tick"));
-        }
-
-        return texts.Join(delimiter: "\n");
+        return StatModifierPreview.Format(new[] { statModifier }, indent);
     }
 
     public static string FormatMinMaxValue(Vector2 minMax)
@@ -786,8 +770,8 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
     public static string FormatProgressAndRate(float current, float max, string name, float rate,
         InGameCardBase currentCard = null, DurabilityStat stat = null, int indent = 0)
     {
-        return
-            $"{FormatProgress(current, max, name, indent)}\n{FormatRate(rate, current, max, currentCard: currentCard, stat: stat)}";
+        return JoinTooltipLines(new[] { FormatProgress(current, max, name, indent),
+            FormatRate(rate, current, max, currentCard: currentCard, stat: stat) });
     }
 
     public static string FormatProgress(float current, float max, string name, int indent = 0)
@@ -886,7 +870,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         { LocalizationKey = "CSFFCardDetailTooltip.WeaponStats", DefaultText = "Weapon Stats" };
 
         return $"{FormatBasicEntry(title, "", indent: indent)}\n" +
-               $"<size=75%>{texts.Join(delimiter: "\n")}</size>";
+               $"<size=75%>{JoinTooltipLines(texts)}</size>";
     }
 
     public static string TimeSpanFormat(TimeSpan ts)
@@ -954,7 +938,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         if (!string.IsNullOrWhiteSpace(statOnFullZeroTitle)) texts.Add(statOnFullZeroTitle);
         if (!string.IsNullOrWhiteSpace(dropList)) texts.Add(dropList);
         if (!string.IsNullOrWhiteSpace(statOnFullZeroText)) texts.Add(statOnFullZeroText);
-        return texts.Join(delimiter: "\n");
+        return JoinTooltipLines(texts);
     }
 
     public static string FormatRateEntry(float value, string name, bool isMultiply = false)

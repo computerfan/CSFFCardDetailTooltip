@@ -31,6 +31,7 @@ internal class Locale
 
         Regex regex = new("\\\\n");
         Dictionary<string, string> currentTexts = LocalizationManager.CurrentTexts;
+        if (currentTexts == null) return;
         foreach (var item in dictionary)
             if (!currentTexts.ContainsKey(item.Key) && item.Value.Count >= 2)
                 currentTexts.Add(item.Key, regex.Replace(item.Value.get_Item(1), "\n"));

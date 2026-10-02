@@ -151,8 +151,55 @@ public static class Commands
         }
     }
 
+    static void CheckTooltipFormatting()
+    {
+        var stats = Resources.FindObjectsOfTypeAll<GameStat>().Take(2).ToArray();
+        Check(stats.Length == 2, "stat formatting fixtures available");
+        var first = new StatModifier { Stat = stats[0], ValueModifier = Vector2.one * 2, ApplyEachTick = true };
+        var second = new StatModifier { Stat = stats[1], RateModifier = Vector2.one * 3,
+            MinValueModifier = Vector2.one * -1, MaxValueModifier = Vector2.one * 4, ApplyEachTick = true };
+        first = new StatModifier(first, 1, false, "Source A", "", 0);
+        second = new StatModifier(second, 1, false, "Source B", "", 0);
+        string heading = Utils.LcStr("CSFFCardDetailTooltip.PerTick", "Per action tick");
+        var once = new StatModifier { Stat = stats[0], ValueModifier = Vector2.one * -24 };
+        var empty = new StatModifier { Stat = stats[0], ApplyEachTick = true };
+        string text = StatModifierPreview.Format(new[] { first, empty, once, second }, 2);
+        Check(text.Split(new[] { heading }, StringSplitOptions.None).Length == 2, "one heading for multiple per-tick effects");
+        Check(text.IndexOf("-24", StringComparison.Ordinal) < text.IndexOf(heading, StringComparison.Ordinal), "one-time effects stay outside per-tick group");
+        Check(text.Contains("Source A") && text.Contains("Source B"), "modifier sources retained");
+        Check(text.Contains(stats[0].GameName.ToString()) && text.Contains(stats[1].GameName.ToString()), "distinct stat labels retained");
+        Check(text.Contains(Utils.LcStr("CSFFCardDetailTooltip.Minimum", "Minimum")) &&
+            text.Contains(Utils.LcStr("CSFFCardDetailTooltip.Maximum", "Maximum")), "minimum and maximum changes retained");
+        Check(text.Contains(Utils.LcStr("CSFFCardDetailTooltip.Rate", "Rate")), "rate changes retained");
+        Check(!text.Split('\n').Any(string.IsNullOrWhiteSpace), "grouped stat output has no empty lines");
+        Check(StatModifierPreview.Format(new[] { empty, default(StatModifier) }) == "", "empty effects omit their heading");
+        Check(StatModifierPreview.Format(null) == "", "missing modifier list is empty");
+        Check(!StatModifierPreview.Format(new[] { once }).Contains(heading), "one-time-only effects have no per-tick heading");
+        Check(Utils.JoinTooltipLines(new[] { "", "first\r\n\n", null, " \n  second", "" }) == "first\n  second",
+            "empty lines removed without losing child indentation");
+
+        var counter = ScriptableObject.CreateInstance<LocalTickCounter>();
+        counter.name = "Counter fixture";
+        try
+        {
+            object boxed = new LocalCounterEffect { Counter = counter };
+            AccessTools.Field(typeof(LocalCounterEffect), "UsageRateModifier").SetValue(boxed, new OptionalFloatValue(false, 99));
+            Check(LocalCounterEffectPreview.FormatRateEntry((LocalCounterEffect)boxed, DurabilitiesTypes.Usage) == "",
+                "disabled counter with nonzero stored value is hidden");
+            AccessTools.Field(typeof(LocalCounterEffect), "UsageRateModifier").SetValue(boxed, null);
+            Check(LocalCounterEffectPreview.FormatRateEntry((LocalCounterEffect)boxed, DurabilitiesTypes.Usage) == "", "missing counter value is hidden");
+            AccessTools.Field(typeof(LocalCounterEffect), "UsageRateModifier").SetValue(boxed, new OptionalFloatValue(true, 0));
+            Check(LocalCounterEffectPreview.FormatRateEntry((LocalCounterEffect)boxed, DurabilitiesTypes.Usage) == "", "zero counter value is hidden");
+            AccessTools.Field(typeof(LocalCounterEffect), "UsageRateModifier").SetValue(boxed, new OptionalFloatValue(true, 3));
+            string active = LocalCounterEffectPreview.FormatRateEntry((LocalCounterEffect)boxed, DurabilitiesTypes.Usage);
+            Check(active.Contains("+3") && active.Contains(counter.name), "active counter value and source retained");
+        }
+        finally { UnityEngine.Object.Destroy(counter); }
+    }
+
     static void RunChecks()
     {
+        CheckTooltipFormatting();
         var triangle = new[] { new Vector2(0, 1), new Vector2(0, 1) };
         Equal(EncounterPlayerDamageReportPreview.ProbabilityBelow(triangle, 0.5), 0.125, "independent rolls lower tail");
         Equal(EncounterPlayerDamageReportPreview.ProbabilityBelow(triangle, 1), 0.5, "independent rolls midpoint");
@@ -180,6 +227,16 @@ public static class Commands
         Check(!ReferenceEquals(originalStats, preview.AllStatModifiers) && ReferenceEquals(originalStats, action.AllStatModifiers), "action caches isolated");
         Check(JsonUtility.ToJson(action) == original, "action source unchanged");
         Check(RandomState() == random, "action preview preserves random state");
+        var emptyPreview = CardActionPreview.PreviewAction(action, knife, null);
+        emptyPreview.AllStatModifiers = new List<StatModifier> { default };
+        emptyPreview.AllTemporaryStatModifiers = new List<StatModifier> { default };
+        string emptySections = (string)AccessTools.Method(typeof(Utils), "FormatResolvedCardAction")
+            .Invoke(null, new object[] { emptyPreview, knife, 0, null });
+        Check(!emptySections.Contains(Utils.LcStr("CSFFCardDetailTooltip.StatModifier", "Stat Modifier")) &&
+            !emptySections.Contains(Utils.LcStr("CSFFCardDetailTooltip.DuringAction", "During this action only")),
+            "empty action stat groups omit section headings");
+        Check(string.IsNullOrEmpty(emptySections) || !emptySections.Split('\n').Any(string.IsNullOrWhiteSpace),
+            "action output has no empty lines");
         string weaponText = Utils.FormatWeaponStats(knife);
         Check(RandomState() == random, "weapon preview preserves random state");
         Check(knife.CardModel.WeaponMoves.All(m => weaponText.Contains(m.ActionName.ToString())), "knife move names displayed");

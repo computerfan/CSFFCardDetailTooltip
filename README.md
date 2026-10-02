@@ -35,9 +35,9 @@ Compatibility with older stable versions and Android has not been verified.
 
 ## Credits
 
-Thanks to [Shosetsu](https://github.com/Shosetsu/CSFFCardDetailTooltip) and
-[SamaraFleurety](https://github.com/SamaraFleurety/CSFFCardDetailTooltip) for their
-fork updates and compatibility fixes.
+Thanks to [Shosetsu](https://github.com/Shosetsu/CSFFCardDetailTooltip) for fork
+updates, and [SamaraFleurety](https://github.com/SamaraFleurety/CSFFCardDetailTooltip)
+for card-aware durability visibility, counter-modifier access and null-check fixes.
 
 ## Settings (Optional)
 
@@ -57,6 +57,14 @@ The configuration file can be found at `/BepInEx/config/CSFFCardDetailTooltip.cf
 __Toggle Note__: When using the hotkey to enable/disable the detailed tooltips, the tooltips will not be updated until the user moves the mouse off of a card.
 
 # Change Log
+
+## Unreleased
+
+- Group per-action-tick stat effects under one heading, preserving individual
+  stat names and available modifier sources.
+- Hide empty tooltip lines and empty stat-effect sections.
+- Ignore disabled or missing local-counter modifiers in durability breakdowns.
+- Handle missing localization dictionaries and stat-action models safely.
 
 ## 1.0.11
 

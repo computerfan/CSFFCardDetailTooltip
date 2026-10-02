@@ -207,7 +207,7 @@ namespace CSFFCardDetailTooltip
                     LastDragHoverCard = __instance;
                     orgTooltip.TooltipContent =
                         (string.IsNullOrEmpty(__instance.Content) ? "" : __instance.Content + "\n") + "<size=75%>" +
-                        texts.Join(delimiter: "\n") + "</size>";
+                        JoinTooltipLines(texts) + "</size>";
                 }
 
                 return;
@@ -387,8 +387,7 @@ namespace CSFFCardDetailTooltip
                 if (cardModel.LocalCounterEffects != null)
                     for (int i = 0; i < cardModel.LocalCounterEffects.Length; i++)
                         if (cardModel.LocalCounterEffects[i].IsActive(__instance))
-                            texts.Add(FormatRateEntry(cardModel.LocalCounterEffects[i].SpoilageRateModifier.FloatValue,
-                                cardModel.LocalCounterEffects[i].Counter.name));
+                            texts.Add(LocalCounterEffectPreview.FormatRateEntry(cardModel.LocalCounterEffects[i], DurabilitiesTypes.Spoilage));
                 if (cardModel.SpoilageTime.ExtraRateWhenEquipped != 0 && graphicsM &&
                     graphicsM.CharacterWindow.HasCardEquipped(__instance))
                     texts.Add(FormatRateEntry(cardModel.SpoilageTime.ExtraRateWhenEquipped,
@@ -424,10 +423,7 @@ namespace CSFFCardDetailTooltip
                     for (int i = 0; i < __instance.ContainedLiquid.CardModel.LocalCounterEffects.Length; i++)
                         if (__instance.ContainedLiquid.CardModel.LocalCounterEffects[i]
                             .IsActive(__instance.ContainedLiquid))
-                            texts.Add(FormatRateEntry(
-                                __instance.ContainedLiquid.CardModel.LocalCounterEffects[i].SpoilageRateModifier
-                                    .FloatValue,
-                                __instance.ContainedLiquid.CardModel.LocalCounterEffects[i].Counter.name));
+                            texts.Add(LocalCounterEffectPreview.FormatRateEntry(__instance.ContainedLiquid.CardModel.LocalCounterEffects[i], DurabilitiesTypes.Spoilage));
                 if (__instance.ContainedLiquid.CardModel.SpoilageTime.ExtraRateWhenEquipped != 0 && graphicsM &&
                     graphicsM.CharacterWindow.HasCardEquipped(__instance.ContainedLiquid))
                     texts.Add(FormatRateEntry(__instance.ContainedLiquid.CardModel.SpoilageTime.ExtraRateWhenEquipped,
@@ -462,8 +458,7 @@ namespace CSFFCardDetailTooltip
                 if (cardModel.LocalCounterEffects != null)
                     for (int i = 0; i < cardModel.LocalCounterEffects.Length; i++)
                         if (cardModel.LocalCounterEffects[i].IsActive(__instance))
-                            texts.Add(FormatRateEntry(cardModel.LocalCounterEffects[i].UsageRateModifier.FloatValue,
-                                cardModel.LocalCounterEffects[i].Counter.name));
+                            texts.Add(LocalCounterEffectPreview.FormatRateEntry(cardModel.LocalCounterEffects[i], DurabilitiesTypes.Usage));
                 if (cardModel.UsageDurability.ExtraRateWhenEquipped != 0 && graphicsM &&
                     graphicsM.CharacterWindow.HasCardEquipped(__instance))
                     texts.Add(FormatRateEntry(cardModel.UsageDurability.ExtraRateWhenEquipped,
@@ -497,8 +492,7 @@ namespace CSFFCardDetailTooltip
                 if (cardModel.LocalCounterEffects != null)
                     for (int i = 0; i < cardModel.LocalCounterEffects.Length; i++)
                         if (cardModel.LocalCounterEffects[i].IsActive(__instance))
-                            texts.Add(FormatRateEntry(cardModel.LocalCounterEffects[i].FuelRateModifier.FloatValue,
-                                cardModel.LocalCounterEffects[i].Counter.name));
+                            texts.Add(LocalCounterEffectPreview.FormatRateEntry(cardModel.LocalCounterEffects[i], DurabilitiesTypes.Fuel));
                 if (cardModel.FuelCapacity.ExtraRateWhenEquipped != 0 && graphicsM &&
                     graphicsM.CharacterWindow.HasCardEquipped(__instance))
                     texts.Add(FormatRateEntry(cardModel.FuelCapacity.ExtraRateWhenEquipped,
@@ -531,9 +525,7 @@ namespace CSFFCardDetailTooltip
                 if (cardModel.LocalCounterEffects != null)
                     for (int i = 0; i < cardModel.LocalCounterEffects.Length; i++)
                         if (cardModel.LocalCounterEffects[i].IsActive(__instance))
-                            texts.Add(FormatRateEntry(
-                                cardModel.LocalCounterEffects[i].ConsumableChargesModifier.FloatValue,
-                                cardModel.LocalCounterEffects[i].Counter.name));
+                            texts.Add(LocalCounterEffectPreview.FormatRateEntry(cardModel.LocalCounterEffects[i], DurabilitiesTypes.Progress));
                 if (cardModel.Progress.ExtraRateWhenEquipped != 0 && graphicsM &&
                     graphicsM.CharacterWindow.HasCardEquipped(__instance))
                     texts.Add(FormatRateEntry(cardModel.Progress.ExtraRateWhenEquipped,
@@ -590,8 +582,7 @@ namespace CSFFCardDetailTooltip
                 if (cardModel.LocalCounterEffects != null)
                     for (int i = 0; i < cardModel.LocalCounterEffects.Length; i++)
                         if (cardModel.LocalCounterEffects[i].IsActive(__instance))
-                            texts.Add(FormatRateEntry(cardModel.LocalCounterEffects[i].Special1RateModifier.FloatValue,
-                                cardModel.LocalCounterEffects[i].Counter.name));
+                            texts.Add(LocalCounterEffectPreview.FormatRateEntry(cardModel.LocalCounterEffects[i], DurabilitiesTypes.Special1));
                 if (cardModel.SpecialDurability1.ExtraRateWhenEquipped != 0 && graphicsM &&
                     graphicsM.CharacterWindow.HasCardEquipped(__instance))
                     texts.Add(FormatRateEntry(cardModel.SpecialDurability1.ExtraRateWhenEquipped,
@@ -624,8 +615,7 @@ namespace CSFFCardDetailTooltip
                 if (cardModel.LocalCounterEffects != null)
                     for (int i = 0; i < cardModel.LocalCounterEffects.Length; i++)
                         if (cardModel.LocalCounterEffects[i].IsActive(__instance))
-                            texts.Add(FormatRateEntry(cardModel.LocalCounterEffects[i].Special2RateModifier.FloatValue,
-                                cardModel.LocalCounterEffects[i].Counter.name));
+                            texts.Add(LocalCounterEffectPreview.FormatRateEntry(cardModel.LocalCounterEffects[i], DurabilitiesTypes.Special2));
                 if (cardModel.SpecialDurability2.ExtraRateWhenEquipped != 0 && graphicsM &&
                     graphicsM.CharacterWindow.HasCardEquipped(__instance))
                     texts.Add(FormatRateEntry(cardModel.SpecialDurability2.ExtraRateWhenEquipped,
@@ -658,8 +648,7 @@ namespace CSFFCardDetailTooltip
                 if (cardModel.LocalCounterEffects != null)
                     for (int i = 0; i < cardModel.LocalCounterEffects.Length; i++)
                         if (cardModel.LocalCounterEffects[i].IsActive(__instance))
-                            texts.Add(FormatRateEntry(cardModel.LocalCounterEffects[i].Special3RateModifier.FloatValue,
-                                cardModel.LocalCounterEffects[i].Counter.name));
+                            texts.Add(LocalCounterEffectPreview.FormatRateEntry(cardModel.LocalCounterEffects[i], DurabilitiesTypes.Special3));
                 if (cardModel.SpecialDurability3.ExtraRateWhenEquipped != 0 && graphicsM &&
                     graphicsM.CharacterWindow.HasCardEquipped(__instance))
                     texts.Add(FormatRateEntry(cardModel.SpecialDurability3.ExtraRateWhenEquipped,
@@ -692,8 +681,7 @@ namespace CSFFCardDetailTooltip
                 if (cardModel.LocalCounterEffects != null)
                     for (int i = 0; i < cardModel.LocalCounterEffects.Length; i++)
                         if (cardModel.LocalCounterEffects[i].IsActive(__instance))
-                            texts.Add(FormatRateEntry(cardModel.LocalCounterEffects[i].Special4RateModifier.FloatValue,
-                                cardModel.LocalCounterEffects[i].Counter.name));
+                            texts.Add(LocalCounterEffectPreview.FormatRateEntry(cardModel.LocalCounterEffects[i], DurabilitiesTypes.Special4));
                 if (cardModel.SpecialDurability4.ExtraRateWhenEquipped != 0 && graphicsM &&
                     graphicsM.CharacterWindow.HasCardEquipped(__instance))
                     texts.Add(FormatRateEntry(cardModel.SpecialDurability4.ExtraRateWhenEquipped,
@@ -709,10 +697,11 @@ namespace CSFFCardDetailTooltip
                 texts.Add(FormatWeaponStats(__instance));
             }
 
-            if (texts.Count > 0)
+            string tooltipContent = JoinTooltipLines(texts);
+            if (!string.IsNullOrWhiteSpace(tooltipContent))
             {
                 MyTooltip.TooltipTitle = "";
-                MyTooltip.TooltipContent = "<size=75%>" + texts.Join(delimiter: "\n") + "</size>";
+                MyTooltip.TooltipContent = "<size=75%>" + tooltipContent + "</size>";
                 MyTooltip.HoldText = "";
                 MyTooltip.Priority = -1;
                 Tooltip.AddTooltip(MyTooltip);
