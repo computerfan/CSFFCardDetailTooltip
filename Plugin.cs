@@ -32,7 +32,7 @@ namespace CSFFCardDetailTooltip
     public class Plugin : BaseUnityPlugin
 #endif
     {
-        public static TooltipText MyTooltip = new();
+
         public static InGameStat InGamePlayerWeight;
         public static bool Enabled;
         public static KeyCode HotKey;
@@ -43,10 +43,6 @@ namespace CSFFCardDetailTooltip
         public static bool AdditionalEncounterLogMessage;
         public static bool ForceInspectStatInfos;
         public static bool HasWikiMod106;
-
-
-        public static InGameCardBase LastDragHoverCard;
-        public static string LastDragHoverCardOrgTooltipContent;
 
 #if MELON_LOADER
         private MelonPreferences_Category GeneralPreferencesCategory;
@@ -157,6 +153,7 @@ namespace CSFFCardDetailTooltip
         [HarmonyPatch(typeof(InGameCardBase), "OnHoverEnter")]
         public static void OnHoverEnterPatch(InGameCardBase __instance)
         {
+            TooltipProviderPreview.Remove(__instance);
             if (!Enabled || __instance.IsPinned) return;
             CardData cardModel = __instance.CardModel;
             if (!cardModel) return;
@@ -177,15 +174,6 @@ namespace CSFFCardDetailTooltip
             {
                 InGameDraggableCard droppedCard = GameManager.DraggedCard;
                 if (!droppedCard || !droppedCard.CanBeDragged) return;
-                if (LastDragHoverCard == __instance) return;
-
-                if (LastDragHoverCard != null)
-                {
-                    TooltipText orgTooltip = LastDragHoverCard.MyTooltip;
-                    if (orgTooltip != null) orgTooltip.TooltipContent = LastDragHoverCardOrgTooltipContent;
-                    LastDragHoverCard = null;
-                }
-
                 CardOnCardAction action = __instance.PossibleAction;
                 if (action == null) return;
                 InGameCardBase currentCard =
@@ -200,15 +188,8 @@ namespace CSFFCardDetailTooltip
                 }
 
                 texts.Add(FormatCardOnCardAction(action, currentCard, droppedCard));
-                if (texts.Count > 0)
-                {
-                    TooltipText orgTooltip = __instance.MyTooltip;
-                    LastDragHoverCardOrgTooltipContent = __instance.Content;
-                    LastDragHoverCard = __instance;
-                    orgTooltip.TooltipContent =
-                        (string.IsNullOrEmpty(__instance.Content) ? "" : __instance.Content + "\n") + "<size=75%>" +
-                        JoinTooltipLines(texts) + "</size>";
-                }
+                string dragContent = JoinTooltipLines(texts);
+                TooltipProviderPreview.Set(__instance, string.IsNullOrWhiteSpace(dragContent) ? null : "<size=75%>" + dragContent + "</size>");
 
                 return;
             }
@@ -699,14 +680,7 @@ namespace CSFFCardDetailTooltip
 
             texts.Add(SelectedNPCDutyPreview.FormatCard(__instance));
             string tooltipContent = JoinTooltipLines(texts);
-            if (!string.IsNullOrWhiteSpace(tooltipContent))
-            {
-                MyTooltip.TooltipTitle = "";
-                MyTooltip.TooltipContent = "<size=75%>" + tooltipContent + "</size>";
-                MyTooltip.HoldText = "";
-                MyTooltip.Priority = -1;
-                Tooltip.AddTooltip(MyTooltip);
-            }
+            TooltipProviderPreview.Set(__instance, string.IsNullOrWhiteSpace(tooltipContent) ? null : "<size=75%>" + tooltipContent + "</size>");
         }
 
 
@@ -714,38 +688,29 @@ namespace CSFFCardDetailTooltip
         [HarmonyPatch(typeof(InGameCardBase), "OnHoverExit")]
         public static void InGameCardBaseOnHoverExitPatch(InGameCardBase __instance)
         {
-            Tooltip.RemoveTooltip(MyTooltip);
-            Tooltip.Instance.TooltipContent.pageToDisplay = 1;
+            TooltipProviderPreview.Remove(__instance);
+            if (Tooltip.Instance) Tooltip.Instance.TooltipContent.pageToDisplay = 1;
         }
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(InGameDraggableCard), "OnEndDrag")]
         public static void InGameDraggableCardOnEndDragPatch(InGameDraggableCard __instance)
         {
-            LastDragHoverCard = null;
+            TooltipProviderPreview.ClearCards();
         }
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(EquipmentButton), "Update")]
         public static void EquipmentButtonUpdatePatch(EquipmentButton __instance)
         {
-            if (HasWikiMod106)
+            if (HasWikiMod106 || !Enabled || GameManager.DraggedCard)
+            {
+                TooltipProviderPreview.Remove(__instance);
                 return;
-            if (!Enabled)
-            {
-                InGamePlayerWeight = null;
-                __instance.SetTooltip(LocalizedString.Equipment, null, null);
             }
-            else
-            {
-                if (InGamePlayerWeight == null)
-                    InGamePlayerWeight = MBSingleton<GameManager>.Instance.InGamePlayerWeight;
-                if (!(bool)GameManager.DraggedCard)
-                    __instance.SetTooltip(__instance.Title,
-                        FormatBasicEntry(
-                            $"{InGamePlayerWeight.SimpleCurrentValue}/{InGamePlayerWeight.StatModel.MinMaxValue.y}",
-                            "Weight"), null);
-            }
+            InGamePlayerWeight = GameManager.Instance ? GameManager.Instance.InGamePlayerWeight : null;
+            TooltipProviderPreview.Set(__instance, InGamePlayerWeight == null ? null : FormatBasicEntry(
+                $"{InGamePlayerWeight.SimpleCurrentValue}/{InGamePlayerWeight.StatModel.MinMaxValue.y}", "Weight"));
         }
 
         [HarmonyPostfix]

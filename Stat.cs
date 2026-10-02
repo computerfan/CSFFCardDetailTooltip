@@ -9,19 +9,14 @@ namespace CSFFCardDetailTooltip;
 
 internal class Stat
 {
-    // Populate the tooltip before TooltipProvider adds it to the visible list.
+    // Keep supplementary details separate from the game's tooltip source.
     [HarmonyPrefix]
     [HarmonyPatch(typeof(TooltipProvider), "OnHoverEnter")]
     public static void StatStatusGraphicsPatch(TooltipProvider __instance)
     {
         if (__instance is not StatStatusGraphics statStatusGraphics) return;
-        if (Plugin.Enabled)
-            statStatusGraphics.SetTooltip(statStatusGraphics.Title,
-            $"{(string.IsNullOrWhiteSpace(statStatusGraphics.ModelStatus.Description) ? "" : $"{statStatusGraphics.ModelStatus.Description.ToString()}\n")}{FormatInGameStat(statStatusGraphics.ModelStatus.ParentStat)}",
-            "");
-        else
-            //Reset the tool tip to the base game settings.
-            __instance.SetTooltip(statStatusGraphics.ModelStatus.GameName, statStatusGraphics.ModelStatus.Description, "");
+        TooltipProviderPreview.Set(__instance, Plugin.Enabled && statStatusGraphics.ModelStatus?.ParentStat != null
+            ? FormatInGameStat(statStatusGraphics.ModelStatus.ParentStat) : null);
     }
 
     [HarmonyPrefix]

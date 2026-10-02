@@ -197,8 +197,87 @@ public static class Commands
         finally { UnityEngine.Object.Destroy(counter); }
     }
 
+    static void CheckNativeTooltipPreservation()
+    {
+        var root = new GameObject("Tooltip preservation fixture");
+        var provider = root.AddComponent<TooltipProvider>();
+        var tooltip = Tooltip.Instance;
+        var render = AccessTools.Method(typeof(Tooltip), "LateUpdate");
+        var list = (List<TooltipText>)AccessTools.Field(typeof(Tooltip), "CurrentTooltips").GetValue(tooltip);
+        var enabled = Plugin.Enabled;
+        var foreign = new TooltipText { Priority = int.MaxValue, TooltipContent = "Other provider" };
+        try
+        {
+            Plugin.Enabled = true;
+            const string original = "Author text\n\n<b>New system</b>";
+            provider.SetTooltip("Author title", original, "Author hold prompt");
+            var source = (TooltipText)AccessTools.Field(typeof(TooltipProvider), "MyTooltip").GetValue(provider);
+            source.Priority = int.MaxValue - 1;
+            provider.OnHoverEnter();
+            var count = list.Count;
+            TooltipProviderPreview.Set(provider, "Mod details");
+            render.Invoke(tooltip, null);
+            Check(provider.Content == original, "native tooltip source remains verbatim");
+            Check(tooltip.TooltipContent.text == original + "\nMod details", "append preserves blank lines and rich text");
+            Check(tooltip.TooltipTitle.text == "Author title" && source.HoldText == "Author hold prompt", "native title and hold prompt preserved");
+            Check(list.Count == count, "preview registers no replacement tooltip");
+            render.Invoke(tooltip, null);
+            Check(tooltip.TooltipContent.text == original + "\nMod details", "repeated frames do not accumulate preview text");
+            provider.SetTooltip("Updated title", "Author live update", "Updated hold prompt");
+            render.Invoke(tooltip, null);
+            Check(tooltip.TooltipContent.text == "Author live update\nMod details", "live native updates immediately preserved");
+            Tooltip.AddTooltip(foreign);
+            render.Invoke(tooltip, null);
+            Check(tooltip.TooltipContent.text == "Other provider", "higher priority provider is never supplemented with unrelated details");
+            Tooltip.RemoveTooltip(foreign);
+            provider.NormalizedHoldTime = 0.5f;
+            render.Invoke(tooltip, null);
+            Check(tooltip.TooltipContent.text == "Author live update" && source.NormalizedHoldTime == 0.5f, "hold progress preserved without appended preview");
+            provider.NormalizedHoldTime = 0;
+            Plugin.Enabled = false;
+            render.Invoke(tooltip, null);
+            Check(tooltip.TooltipContent.text == "Author live update", "disabled mod leaves native content untouched");
+            Plugin.Enabled = true;
+            provider.OnHoverExit();
+            provider.OnHoverEnter();
+            render.Invoke(tooltip, null);
+            Check(tooltip.TooltipContent.text == "Author live update", "hover exit clears stale preview");
+            TooltipProviderPreview.Set(provider, "Stale details");
+            root.SetActive(false);
+            root.SetActive(true);
+            provider.SetTooltip("Reused", "Reused content", null);
+            provider.OnHoverEnter();
+            render.Invoke(tooltip, null);
+            Check(tooltip.TooltipContent.text == "Reused content", "disabled and reused provider clears stale preview");
+            provider.SetTooltip("Empty", "", null);
+            TooltipProviderPreview.Set(provider, "Mod details");
+            render.Invoke(tooltip, null);
+            Check(tooltip.TooltipContent.text == "Mod details" && provider.Content == "", "empty native content gains no leading blank line");
+            AccessTools.Method(typeof(TooltipProvider), "CancelTooltip").Invoke(provider, null);
+            render.Invoke(tooltip, null);
+            Check(tooltip.TooltipContent.text == "Mod details", "provider without native tooltip still shows mod details");
+            Check(AccessTools.Field(typeof(TooltipProvider), "MyTooltip").GetValue(provider) == null, "fallback never creates or replaces native source");
+            Tooltip.AddTooltip(foreign);
+            render.Invoke(tooltip, null);
+            Check(tooltip.TooltipContent.text == "Other provider", "fallback yields to native tooltip priority");
+            Tooltip.RemoveTooltip(foreign);
+            provider.SetTooltip("New source", "New native text", null);
+            provider.OnHoverEnter();
+            render.Invoke(tooltip, null);
+            Check(tooltip.TooltipContent.text == "New native text\nMod details", "new native source replaces fallback while keeping its text");
+        }
+        finally
+        {
+            provider.OnHoverExit();
+            Tooltip.RemoveTooltip(foreign);
+            UnityEngine.Object.DestroyImmediate(root);
+            Plugin.Enabled = enabled;
+        }
+    }
+
     static void RunChecks()
     {
+        CheckNativeTooltipPreservation();
         CheckTooltipFormatting();
         var triangle = new[] { new Vector2(0, 1), new Vector2(0, 1) };
         Equal(EncounterPlayerDamageReportPreview.ProbabilityBelow(triangle, 0.5), 0.125, "independent rolls lower tail");

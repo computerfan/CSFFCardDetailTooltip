@@ -10,7 +10,7 @@ namespace CSFFCardDetailTooltip;
 
 internal class Action
 {
-    public static TooltipText ActionTooltip = new();
+
     private static readonly ConditionalWeakTable<DismantleActionButton, ActionContext> ButtonActions = new();
 
     private sealed class ActionContext
@@ -152,22 +152,14 @@ internal class Action
         }
 
         string newContent = JoinTooltipLines(texts);
-        if (!string.IsNullOrWhiteSpace(newContent))
-        {
-            ActionTooltip.TooltipTitle = __instance.Title;
-            string orgContent = __instance.MyTooltip?.TooltipContent;
-            ActionTooltip.TooltipContent = orgContent + (string.IsNullOrEmpty(orgContent) ? "" : "\n") +
-                                           "<size=70%>" + newContent + "</size>";
-            ActionTooltip.HoldText = __instance.MyTooltip?.HoldText ?? "";
-            Tooltip.AddTooltip(ActionTooltip);
-        }
+        TooltipProviderPreview.Set(__instance, string.IsNullOrWhiteSpace(newContent) ? null : "<size=70%>" + newContent + "</size>");
     }
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(DismantleActionButton), "OnHoverExit")]
     public static void DismantleActionButtonOnHoverExitPatch(DismantleActionButton __instance)
     {
-        Tooltip.RemoveTooltip(ActionTooltip);
+        TooltipProviderPreview.Remove(__instance);
         if (Tooltip.Instance) Tooltip.Instance.TooltipContent.pageToDisplay = 1;
     }
 
@@ -176,7 +168,7 @@ internal class Action
     public static void DismantleActionButtonOnDisablePatch(DismantleActionButton __instance)
     {
         ButtonActions.Remove(__instance);
-        Tooltip.RemoveTooltip(ActionTooltip);
+        TooltipProviderPreview.Remove(__instance);
         if (Tooltip.Instance) Tooltip.Instance.TooltipContent.pageToDisplay = 1;
     }
 

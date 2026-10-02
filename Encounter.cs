@@ -7,7 +7,7 @@ namespace CSFFCardDetailTooltip;
 
 internal class Encounter
 {
-    public static TooltipText EncounterTooltip = new();
+
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(TooltipProvider), "OnHoverEnter")]
@@ -24,15 +24,7 @@ internal class Encounter
             texts.Add(FormatEncounterPlayerAction(encounterOptionButton.SubActions[0], popup));
 
         string newContent = texts.Join(delimiter: "\n");
-        if (!string.IsNullOrWhiteSpace(newContent))
-        {
-            EncounterTooltip.TooltipTitle = __instance.Title;
-            string orgContent = __instance.MyTooltip == null ? "" : __instance.MyTooltip.TooltipContent;
-            EncounterTooltip.TooltipContent = orgContent + (string.IsNullOrEmpty(orgContent) ? "" : "\n") +
-                                              "<size=70%>" + newContent + "</size>";
-            EncounterTooltip.HoldText = __instance.MyTooltip == null ? "" : __instance.MyTooltip.HoldText;
-            Tooltip.AddTooltip(EncounterTooltip);
-        }
+        TooltipProviderPreview.Set(__instance, string.IsNullOrWhiteSpace(newContent) ? null : "<size=70%>" + newContent + "</size>");
     }
 
     [HarmonyPrefix]
@@ -87,8 +79,8 @@ internal class Encounter
     public static void EncounterOptionButtonOnHoverExitPatch(TooltipProvider __instance)
     {
         if (__instance is not EncounterOptionButton) return;
-        Tooltip.RemoveTooltip(EncounterTooltip);
-        Tooltip.Instance.TooltipContent.pageToDisplay = 1;
+        TooltipProviderPreview.Remove(__instance);
+        if (Tooltip.Instance) Tooltip.Instance.TooltipContent.pageToDisplay = 1;
     }
 
     [HarmonyPostfix]
@@ -96,7 +88,7 @@ internal class Encounter
     public static void EncounterOptionButtonOnDisablePatch(TooltipProvider __instance)
     {
         if (__instance is not EncounterOptionButton) return;
-        Tooltip.RemoveTooltip(EncounterTooltip);
-        Tooltip.Instance.TooltipContent.pageToDisplay = 1;
+        TooltipProviderPreview.Remove(__instance);
+        if (Tooltip.Instance) Tooltip.Instance.TooltipContent.pageToDisplay = 1;
     }
 }

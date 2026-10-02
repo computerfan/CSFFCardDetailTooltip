@@ -25,6 +25,8 @@ Compatibility with older stable versions and Android has not been verified.
 
 ## Tooltip notes
 
+- Details are appended to the game's current tooltip text, preserving its original
+  descriptions, live updates and hold-to-act prompts.
 - Cooking rates are averages; completion estimates use the current rate and can
   change when processing pauses or conditions change.
 - Drop percentages describe possible outcome groups. Displayed quantities are
