@@ -16,6 +16,9 @@ try { & "$PSScriptRoot/Get-BuildVersion.ps1" -RefType tag -RefName 'v0.0.0' | Ou
 catch { $rejected = $true }
 if (!$rejected) { throw 'Mismatched release tag was accepted.' }
 Write-Host 'PASS: PowerShell syntax, branch/release versions and mismatched tag rejection.'
+& "$PSScriptRoot/Test-DotNetSdk.ps1"
+& "$env:WINDIR/System32/WindowsPowerShell/v1.0/powershell.exe" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$PSScriptRoot/Test-DotNetSdk.ps1"
+if ($LASTEXITCODE -ne 0) { throw 'Windows PowerShell SDK selection test failed.' }
 & "$PSScriptRoot/Test-SteamDownload.ps1"
 $dotnet = & "$PSScriptRoot/Get-DotNetSdk.ps1"
 & $dotnet build "$PSScriptRoot/SteamSession/SteamSession.csproj" -c Release --nologo

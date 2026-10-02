@@ -4,7 +4,7 @@ The Windows workflow downloads only managed DLLs from Steam app **2868860**, dep
 
 ## 1. Create a Steam session locally
 
-Install the **.NET 10 SDK** and use **PowerShell 7**. From this repository, run:
+Install the **.NET 10 SDK**. Local authentication setup supports **Windows PowerShell 5.1** and **PowerShell 7**; the CI scripts use PowerShell 7. From this repository, run:
 
 ```powershell
 ./tools/Initialize-SteamSession.ps1 -Username 'your-steam-login-name'
