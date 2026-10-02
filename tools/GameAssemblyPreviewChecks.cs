@@ -339,6 +339,42 @@ public static class Commands
                 encounter.CurrentEnemySize = 50;
                 encounter.CurrentEnemyBlood = 100;
                 AccessTools.Property(typeof(EncounterPopup), "CurrentEncounter").SetValue(popup, encounter, null);
+                Check(EnemyValuesModifiersPreview.Format(default) == "", "empty enemy effects hidden");
+                Check(EncounterTemporaryEffectPreview.Format(null, encounter, false) == "", "null temporary effect hidden");
+                var effect = new EncounterTemporaryEffect
+                {
+                    EffectID = "Tooltip encounter test", Duration = Vector2Int.zero,
+                    EffectApplies = EnemyActionEffectCondition.OnlyOnHit,
+                    EnemyValuesModifiers = new EnemyValuesModifiers { BloodModifier = Vector2.one * -7, BloodApplies = EnemyActionEffectCondition.OnlyOnHitAndWound },
+                    PlayerValuesModifiers = new[] { new PlayerValuesModifier { ReachModifier = Vector2.one * 13, ApplyOnlyToEscapeActions = true } }
+                };
+                string effectRng = RandomState();
+                var nativeRandom = UnityEngine.Random.state;
+                try
+                {
+                    var body = new BodyLocationModifiers { HeadDefenseModifier = Vector2.one * 15 };
+                    Check(body.Instantiate.HeadDefenseModifier == Vector2.zero, "0.68b native temporary body modifiers are discarded");
+                    var nativeModifier = effect.PlayerValuesModifiers[0].Instantiate;
+                    Check(!nativeModifier.ApplyOnlyToEscapeActions && nativeModifier.WeaponFilter == null, "0.68b native temporary modifier restrictions are discarded");
+                }
+                finally { UnityEngine.Random.state = nativeRandom; }
+                string effectText = EncounterTemporaryEffectPreview.Format(effect, encounter, false);
+                Check(effectText.Contains("13") && effectText.Contains("7") && effectText.Contains(GenericEncounterPlayerActionPreview.Condition(EnemyActionEffectCondition.OnlyOnHitAndWound)), "temporary effects include ranges and nested hit conditions");
+                Check(effectText.Contains(GenericEncounterPlayerActionPreview.Text("UntilEncounterEnds", "Until encounter ends")), "zero duration means encounter lifetime");
+                Check(effectRng == RandomState(), "effect previews never roll chance or instantiate effects");
+                Check(!effectText.Contains(GenericEncounterPlayerActionPreview.Text("EscapeOnly", "Escape actions only")), "temporary preview reflects native discarded restrictions");
+                encounter.TemporaryEffects.Add(effect);
+                string refreshed = EncounterTemporaryEffectPreview.Format(effect, encounter, false);
+                Check(!refreshed.Contains("13") && refreshed.Contains(GenericEncounterPlayerActionPreview.Text("RefreshDuration", "Refreshes duration; does not stack values")), "existing effect refresh does not promise stacked values");
+                encounter.TemporaryEffects.Remove(effect);
+                effect.Duration = new Vector2Int(2, 4);
+                Check(EncounterTemporaryEffectPreview.Format(effect, encounter, true).Contains(GenericEncounterPlayerActionPreview.Text("SubActionDuration", "Sub-action: duration reduced by one immediately")), "sub-action duration adjustment disclosed");
+                var staleAction = new GenericEncounterPlayerAction { IsEscapeAction = true };
+                encounter.CurrentPlayerAction = staleAction;
+                string baselineIncoming = Utils.FormatEnemyHitResult(encounter, encounter.CurrentEnemyAction, popup);
+                encounter.CurrentPlayerAction = null;
+                Check(baselineIncoming == Utils.FormatEnemyHitResult(encounter, encounter.CurrentEnemyAction, popup), "incoming baseline ignores stale player escape action");
+                encounter.CurrentPlayerAction = staleAction;
                 foreach (var move in knife.CardModel.WeaponMoves)
                     foreach (bool distant in new[] { false, true })
                     {
@@ -352,6 +388,21 @@ public static class Commands
                         var rangedField = AccessTools.Field(typeof(EncounterPopup), "CurrentRoundRangedClashResult");
                         string melee = JsonUtility.ToJson(meleeField.GetValue(popup)), ranged = JsonUtility.ToJson(rangedField.GetValue(popup));
                         string text = Utils.FormatEncounterPlayerAction(combatAction, popup);
+                        Check(ReferenceEquals(encounter.CurrentPlayerAction, staleAction), "hover restores selected player action");
+                        Check(!text.Contains("\n\n"), "encounter tooltip hides empty lines");
+                        combatAction.DontShowSuccessChance = true;
+                        Check(!Utils.FormatEncounterPlayerAction(combatAction, popup).Contains(GenericEncounterPlayerActionPreview.Text("EstimatedSuccess", "Native success estimate")), "native hidden success chance respected");
+                        combatAction.DontShowSuccessChance = false;
+                        bool cannotFail = combatAction.CannotFailClash;
+                        combatAction.CannotFailClash = true;
+                        Check(Utils.FormatEncounterPlayerAction(combatAction, popup).Contains(Utils.LcStr("CSFFCardDetailTooltip.Encounter.CannotFail", "Action clash cannot fail")), "guaranteed clash overrides native estimate");
+                        combatAction.CannotFailClash = cannotFail;
+                        var actionType = combatAction.ActionType;
+                        combatAction.ActionType = EncounterPlayerActionType.SubAction;
+                        string subActionText = Utils.FormatEncounterPlayerAction(combatAction, popup);
+                        Check(!subActionText.Contains(GenericEncounterPlayerActionPreview.Text("EstimatedEnemyHit", "Native enemy hit estimate"))
+                            && !subActionText.Contains(GenericEncounterPlayerActionPreview.Text("IncomingAverage", "Incoming wounds at average damage/defense (if hit):")), "sub-actions do not imply enemy retaliation");
+                        combatAction.ActionType = actionType;
                         Check(!text.Contains("NaN") && !text.Contains("Infinity") && text.Length > 0, "combat preview " + move.name + "/" + distant);
                         Check(rng == RandomState() && before == JsonUtility.ToJson(encounter)
                             && melee == JsonUtility.ToJson(meleeField.GetValue(popup)) && ranged == JsonUtility.ToJson(rangedField.GetValue(popup)),

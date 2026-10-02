@@ -60,6 +60,11 @@ __Toggle Note__: When using the hotkey to enable/disable the detailed tooltips, 
 
 ## Unreleased
 
+- Expand encounter previews with conditional stat changes, vulnerability,
+  wrestling and temporary effects, including duration refreshes.
+- Use the hovered action for encounter distance and incoming escape bonuses;
+  label native success estimates, respect guaranteed success and remove
+  misleading harmless-attack hints.
 - Group per-action-tick stat effects under one heading, preserving individual
   stat names and available modifier sources.
 - Hide empty tooltip lines and empty stat-effect sections.

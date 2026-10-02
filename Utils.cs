@@ -60,15 +60,20 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
     public static string FormatEncounterPlayerAction(GenericEncounterPlayerAction action, EncounterPopup popup, int indent = 0)
     {
         var encounter = popup.CurrentEncounter;
-        if (!encounter || encounter.CurrentEnemyAction == null) return string.Empty;
+        if (action == null || !encounter || encounter.CurrentEnemyAction == null) return string.Empty;
         var savedMelee = popup.CurrentRoundMeleeClashResult;
         var savedRanged = popup.CurrentRoundRangedClashResult;
+        var savedAction = encounter.CurrentPlayerAction;
         var random = UnityEngine.Random.state;
         MeleeClashResultsReport melee;
         RangedClashResultReport ranged;
         float chance;
+        EncounterDistanceChange distanceChange;
         try
         {
+            // Native distance resolution also reads CurrentPlayerAction indirectly.
+            encounter.CurrentPlayerAction = action;
+            distanceChange = popup.ChangeDistanceBeforeResolving(action);
             chance = popup.CalculateActionClashChance(action);
             melee = popup.CurrentRoundMeleeClashResult;
             ranged = popup.CurrentRoundRangedClashResult;
@@ -77,10 +82,11 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         {
             popup.CurrentRoundMeleeClashResult = savedMelee;
             popup.CurrentRoundRangedClashResult = savedRanged;
+            encounter.CurrentPlayerAction = savedAction;
             UnityEngine.Random.state = random;
         }
         bool distant = encounter.Distant;
-        switch (popup.ChangeDistanceBeforeResolving(action))
+        switch (distanceChange)
         {
             case EncounterDistanceChange.AddDistance: distant = true; break;
             case EncounterDistanceChange.CloseDistance: distant = false; break;
@@ -90,12 +96,17 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
             : action.ActionRange == ActionRange.Ranged && encounter.CurrentEnemyAction.ActionRange == ActionRange.Ranged;
         var common = rangedClash ? ranged.CommonClashReport : melee.CommonClashReport;
         StringBuilder summary = new();
+        bool enemyCanRespond = action.ActionType == EncounterPlayerActionType.MainAction && !encounter.CurrentEnemyAction.DoesNotAttack;
         summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.PlayerAction", "Player Action"), action.GeneratedActionName, indent: indent));
-        summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.ActionSuccessChance", "Action Success Chance"), $"{chance:P2}", indent: indent));
+        if (!action.DontShowSuccessChance)
+            summary.AppendLine(action.CannotFailClash
+                ? LcStr("CSFFCardDetailTooltip.Encounter.CannotFail", "Action clash cannot fail")
+                : FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.EstimatedSuccess", "Native success estimate"), $"≈{chance:P0}", indent: indent));
         summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.PowerComparison", "Power Comparison"),
             $"{(rangedClash ? ranged.PlayerClashValue : common.PlayerClashValue):0.##} : {(rangedClash ? ranged.EnemyClashValue : common.EnemyClashValue):0.##}", indent: indent));
-        summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.EnemyHitRate", "Enemy Hit Rate"),
-            $"{(rangedClash ? ranged.EnemySuccessChance : melee.EnemySuccessChance):P2}", indent: indent));
+        if (enemyCanRespond)
+            summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.EstimatedEnemyHit", "Native enemy hit estimate"),
+                encounter.CurrentEnemyAction.CannotFailClash ? "100%" : $"≈{(rangedClash ? ranged.EnemySuccessChance : melee.EnemySuccessChance):P0}", indent: indent));
         summary.AppendLine(rangedClash ? ranged.PlayerSummary() : common.PlayerSummary(0, true));
         if (!action.DoesNotAttack)
         {
@@ -104,8 +115,15 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
             summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.DamagePower", "Damage Power"), FormatMinMaxValue(damage), indent: indent));
             summary.AppendLine(FormatPlayerHitResult(encounter, action, popup, damage));
         }
-        summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.DistanceChange", "Distance Change"), GetDistanceChangeText(action.PreClashDistanceChange), indent: indent));
-        return summary.ToString();
+        summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.DistanceChange", "Distance Change"), GetDistanceChangeText(distanceChange), indent: indent));
+        summary.AppendLine(GenericEncounterPlayerActionPreview.FormatEffects(action, encounter, indent));
+        if (enemyCanRespond)
+        {
+            string incoming = FormatEnemyHitResult(encounter, encounter.CurrentEnemyAction, popup, indent + 2, action, distant);
+            if (!string.IsNullOrWhiteSpace(incoming))
+                summary.AppendLine(LcStr("CSFFCardDetailTooltip.Encounter.IncomingAverage", "Incoming wounds at average damage/defense (if hit):") + "\n" + incoming);
+        }
+        return JoinTooltipLines(new[] { summary.ToString() });
     }
 
     public static EnemyActionSelectionReport GenEnemyActionSelection(InGameEncounter _FromEncounter,
@@ -274,7 +292,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         return result.ToString();
     }
     public static string FormatEnemyHitResult(InGameEncounter encounter, EnemyAction action, EncounterPopup popup,
-        int indent = 2)
+        int indent = 2, GenericEncounterPlayerAction playerAction = null, bool? distant = null)
     {
         StringBuilder result = new();
         GameManager gm = GameManager.Instance;
@@ -306,7 +324,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
             playerBodyLocationHit.BaseWeights.RArm = popup.RArm.RangedHitChanceWeight;
             playerBodyLocationHit.BaseWeights.LLeg = popup.LLeg.RangedHitChanceWeight;
             playerBodyLocationHit.BaseWeights.RLeg = popup.RLeg.RangedHitChanceWeight;
-            if (popup.CurrentEncounter.Distant && gm && gm.CoverCards != null)
+            if ((distant ?? encounter.Distant) && gm && gm.CoverCards != null)
                 for (int i = 0; i < gm.CoverCards.Count; i++)
                     if (!gm.CoverCards.get_Item(i).CardModel.AppliesCoverWhenEquipped ||
                         (gm.CoverCards.get_Item(i).CardModel.AppliesCoverWhenEquipped &&
@@ -382,7 +400,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         currentRoundEnemyDamageReport.StatsAddedDamage = action.AddedDamageFromStats(false);
         currentRoundEnemyDamageReport.WrestlingDamage = encounter.Wrestling ? action.WrestlingDamageModifier.RangeMidValue() : 0;
         currentRoundEnemyDamageReport.VsVulnerableDamage = encounter.PlayerVulnerable ? action.DmgVsVulnerableModifier.RangeMidValue() : 0;
-        currentRoundEnemyDamageReport.VsEscapeDamage = encounter.CurrentPlayerAction != null && encounter.CurrentPlayerAction.IsEscapeAction
+        currentRoundEnemyDamageReport.VsEscapeDamage = playerAction != null && playerAction.IsEscapeAction
             ? action.AddedDamageVsEscape(false) : 0;
 
         foreach (BodyLocations bodyPart in bodyParts)

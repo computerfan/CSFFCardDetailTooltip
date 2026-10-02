@@ -1,4 +1,4 @@
-﻿CSFFCardDetailTooltip.BlueprintResultWeight,,蓝图结果重量
+CSFFCardDetailTooltip.BlueprintResultWeight,,蓝图结果重量
 CSFFCardDetailTooltip.EquippedReduction,,装备减重
 CSFFCardDetailTooltip.InventoryWeight,,内容物重量
 CSFFCardDetailTooltip.Capacity,,容量
@@ -60,8 +60,6 @@ CSFFCardDetailTooltip.BodyParts.LArm,Left Arm,左臂
 CSFFCardDetailTooltip.BodyParts.RArm,Right Arm,右臂
 CSFFCardDetailTooltip.BodyParts.LLeg,Left Leg,左腿
 CSFFCardDetailTooltip.BodyParts.RLeg,Right Leg,右腿
-CSFFCardDetailTooltip.Encounter.PossibleWoundsHint,If I am hit by an enemy, I might get hurt: (on average),如果我被敌人击中，我可能会受伤:（平均情况下）
-CSFFCardDetailTooltip.Encounter.ImpossibleWoundsHint,I am confident it can't hurt me! (on average),我自信它伤不到我！（平均情况下）
 CSFFCardDetailTooltip.Encounter.ActionPreview,Action Preview,行动预览
 CSFFCardDetailTooltip.Encounter.PlayerAction,Player Action,玩家行动
 CSFFCardDetailTooltip.Encounter.PowerComparison,Power Comparison,战力比
@@ -73,7 +71,6 @@ CSFFCardDetailTooltip.Encounter.StatusDamageBonus,Status Damage Bonus,状态伤�
 CSFFCardDetailTooltip.Encounter.MeleeSizeDamageBonus,Melee Size Damage Bonus,近战体型伤害加成
 CSFFCardDetailTooltip.Encounter.DamageType,Damage Type,伤害类型
 CSFFCardDetailTooltip.Encounter.HitableParts,Hit-able Parts,可命中部位
-CSFFCardDetailTooltip.Encounter.DistanceChange,Distance Change,距离变化
 CSFFCardDetailTooltip.Encounter.CurrentEnemyStatus,Current Enemy Status,当前敌人状态
 CSFFCardDetailTooltip.Encounter.Health,Health,血量
 CSFFCardDetailTooltip.Encounter.Courage,Courage,勇气
@@ -106,7 +103,6 @@ CSFFCardDetailTooltip.Encounter.DamageThisRound,This Round's Damage,本轮伤害
 CSFFCardDetailTooltip.Encounter.Minor,Minor,轻微
 CSFFCardDetailTooltip.Encounter.Medium,Medium,中等
 CSFFCardDetailTooltip.Encounter.Serious,Serious,沉重
-CSFFCardDetailTooltip.Encounter.AttackDefenseRatio,Attack-Defense Ratio,攻防比
 CSFFCardDetailTooltip.AdditionalDurabilityChanges,Additional durability changes,额外耐久变化
 CSFFCardDetailTooltip.FinalDuration,Final duration,最终耗时
 CSFFCardDetailTooltip.Minimum,Minimum,下限
@@ -119,3 +115,46 @@ CSFFCardDetailTooltip.BeforeTargetBonuses,Current condition and skills; before t
 CSFFCardDetailTooltip.DirectWoundFatality,Direct wound fatality on hit,命中后由伤口直接失血致死的概率
 CSFFCardDetailTooltip.RecipeAverage,Recipe (average per tick),配方（每时间单位平均值）
 CSFFCardDetailTooltip.NoAttack,Does not deal attack damage,不造成攻击伤害
+CSFFCardDetailTooltip.Encounter.EstimatedSuccess,Native success estimate,游戏原生成功率估计
+CSFFCardDetailTooltip.Encounter.EstimatedEnemyHit,Native enemy hit estimate,游戏原生敌人命中率估计
+CSFFCardDetailTooltip.Encounter.IncomingAverage,Incoming wounds at average damage/defense (if hit):,受到命中时的伤口（按平均攻防计算）：
+CSFFCardDetailTooltip.Encounter.IncomingBaseline,Current enemy attack at average damage/defense (before escape bonuses):,当前敌人攻击（平均攻防；未计入逃跑加成）：
+CSFFCardDetailTooltip.Encounter.Always,Always,总是
+CSFFCardDetailTooltip.Encounter.OnlyOnHit,On hit,命中时
+CSFFCardDetailTooltip.Encounter.OnlyOnMiss,On miss,未命中时
+CSFFCardDetailTooltip.Encounter.OnlyOnHitAndWound,On wounding hit,命中并造成伤口时
+CSFFCardDetailTooltip.Encounter.ActionStats,Action stat changes,行动属性变化
+CSFFCardDetailTooltip.Encounter.EnemyValues,Enemy values,敌人属性变化
+CSFFCardDetailTooltip.Encounter.StartWrestling,Start wrestling,开始缠斗
+CSFFCardDetailTooltip.Encounter.StopWrestling,Stop wrestling,结束缠斗
+CSFFCardDetailTooltip.Encounter.PlayerVulnerable,Make player vulnerable,使玩家暴露破绽
+CSFFCardDetailTooltip.Encounter.EnemyVulnerable,Make enemy vulnerable,使敌人暴露破绽
+CSFFCardDetailTooltip.Encounter.Melee,Melee skill,近战能力
+CSFFCardDetailTooltip.Encounter.Ranged,Ranged skill,远程能力
+CSFFCardDetailTooltip.Encounter.Blood,Blood,血量
+CSFFCardDetailTooltip.Encounter.Morale,Morale,士气
+CSFFCardDetailTooltip.Encounter.Value1,Value 1,自定义属性1
+CSFFCardDetailTooltip.Encounter.Value2,Value 2,自定义属性2
+CSFFCardDetailTooltip.Encounter.Value3,Value 3,自定义属性3
+CSFFCardDetailTooltip.Encounter.Value4,Value 4,自定义属性4
+CSFFCardDetailTooltip.Encounter.UntilEncounterEnds,Until encounter ends,直至遭遇结束
+CSFFCardDetailTooltip.Encounter.Rounds,rounds,回合
+CSFFCardDetailTooltip.Encounter.TemporaryEffect,Temporary effect,临时效果
+CSFFCardDetailTooltip.Encounter.SubActionDuration,Sub-action: duration reduced by one immediately,次要行动：持续时间立即减少一回合
+CSFFCardDetailTooltip.Encounter.RefreshDuration,Refreshes duration; does not stack values,刷新持续时间（数值不叠加）
+CSFFCardDetailTooltip.Encounter.PlayerCombat,Player combat modifiers,玩家战斗修正
+CSFFCardDetailTooltip.Encounter.AllWeapons,All weapons,所有武器
+CSFFCardDetailTooltip.Encounter.EscapeOnly,Escape actions only,仅逃跑行动
+CSFFCardDetailTooltip.Encounter.InitialClashValueModifier,Clash power,对抗强度
+CSFFCardDetailTooltip.Encounter.ReachModifier,Reach,攻击距离
+CSFFCardDetailTooltip.Encounter.ClashStealthBonusModifier,Stealth clash bonus,潜行对抗加成
+CSFFCardDetailTooltip.Encounter.ClashIneffectiveRangeMalusModifier,Ineffective range clash modifier,无效距离对抗修正
+CSFFCardDetailTooltip.Encounter.ClashRangedInaccuracyModifier,Ranged inaccuracy,远程不精准度
+CSFFCardDetailTooltip.Encounter.ClashVsEscapeModifier,Clash versus escape,对逃跑目标的对抗修正
+CSFFCardDetailTooltip.Encounter.WrestlingClashBonusModifier,Wrestling clash bonus,缠斗对抗加成
+CSFFCardDetailTooltip.Encounter.ClashVsVulnerableModifier,Clash versus vulnerable,对暴露破绽目标的对抗修正
+CSFFCardDetailTooltip.Encounter.DmgVsVulnerableModifier,Damage versus vulnerable,对暴露破绽目标的伤害修正
+CSFFCardDetailTooltip.Encounter.InitialDamageModifier,Damage,伤害
+CSFFCardDetailTooltip.Encounter.WrestlingDamageBonusModifier,Wrestling damage,缠斗伤害
+CSFFCardDetailTooltip.Encounter.DamageVsEscapeModifier,Damage versus escape,对逃跑目标的伤害修正
+CSFFCardDetailTooltip.Encounter.CannotFail,Action clash cannot fail,本次行动对抗必定成功

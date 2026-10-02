@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
 using static CSFFCardDetailTooltip.Utils;
@@ -41,32 +41,20 @@ internal class Encounter
     {
         if (!Plugin.Enabled || !Plugin.AdditionalEncounterLogMessage) return;
         InGameEncounter encounter = __instance.CurrentEncounter;
-        IEnumerable<string> actionTexts = encounter.EncounterModel.EnemyActions
-            .Where(a => a is { DoesNotAttack: false }).Select(a => FormatEnemyHitResult(encounter, a, __instance, 1));
-        
-        if (actionTexts.Any() && !actionTexts.All(string.IsNullOrEmpty))
+        if (!encounter || encounter.CurrentEnemyAction == null || encounter.CurrentEnemyAction.DoesNotAttack) return;
+        string text = FormatEnemyHitResult(encounter, encounter.CurrentEnemyAction, __instance, 1);
+        // An empty card-drop list says nothing about whether the attack is harmless.
+        if (string.IsNullOrWhiteSpace(text)) return;
+        __instance.AddToLog(new EncounterLogMessage
         {
-            __instance.AddToLog(new EncounterLogMessage
+            LogText = new LocalizedString
             {
-                LogText = new LocalizedString
-                    { LocalizationKey = "CSFFCardDetailTooltip.Encounter.PossibleWoundsHint", DefaultText = "If I am hit by an enemy, I might get hurt: (on average)" }
-            });
-            __instance.AddToLog(new EncounterLogMessage
-            {
-                LogText = new LocalizedString
-                    { LocalizationKey = "IGNOREKEY", DefaultText = string.Join("\n", actionTexts) }
-            });
-        }
-        else
-        {
-            __instance.AddToLog(new EncounterLogMessage
-            {
-                LogText = new LocalizedString
-                    { LocalizationKey = "CSFFCardDetailTooltip.Encounter.ImpossibleWoundsHint", DefaultText = "I am confident it can't hurt me! (on average)" }
-            });
-        }
+                LocalizationKey = "IGNOREKEY",
+                DefaultText = LcStr("CSFFCardDetailTooltip.Encounter.IncomingBaseline",
+                    "Current enemy attack at average damage/defense (before escape bonuses):") + "\n" + text
+            }
+        });
     }
-
     [HarmonyPostfix]
     [HarmonyPatch(typeof(EncounterPopup), "GenerateEnemyWound")]
     public static void PostGenerateEnemyWoundPatch(EncounterPopup __instance)
