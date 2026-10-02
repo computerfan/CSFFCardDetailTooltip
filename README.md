@@ -20,7 +20,7 @@ See <https://docs.bepinex.dev/v5.4.21/articles/user_guide/installation/index.htm
 
 ## Compatibility
 
-The unreleased 1.0.11 candidate targets the Windows open beta `EA_beta_0.68b`.
+Version 1.0.11 targets the Windows open beta `EA_beta_0.68b`.
 Compatibility with older stable versions and Android has not been verified.
 
 ## Tooltip notes
@@ -58,7 +58,7 @@ __Toggle Note__: When using the hotkey to enable/disable the detailed tooltips, 
 
 # Change Log
 
-## 1.0.11 (unreleased; open-beta candidate)
+## 1.0.11
 
 - Update compatibility with open beta `EA_beta_0.68b`, including recipe lookup,
   blueprint weight, drop probabilities and durability visibility.
