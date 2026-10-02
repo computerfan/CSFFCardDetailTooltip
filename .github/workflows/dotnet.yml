@@ -1,125 +1,116 @@
-# This workflow will build a .NET project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
-
-name: .NET
+name: Build Windows mod
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [master]
+    tags: ['v*']
   pull_request:
-    branches: [ "master" ]
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      steam_branch:
+        description: Steam branch (public builds may require different mod code)
+        type: choice
+        options: [openbetabranch, public]
+        default: openbetabranch
+      steam_manifest:
+        description: Optional Windows depot manifest ID; blank selects latest branch
+        type: string
+        default: ''
 
-env:
-  gameAssemblyPath: 'GameAssembly'
-  projectName: 'CSFFCardDetailTooltip'
-  outputPath: "bin\\Release"
-  RESOURCE_URL: '${{ secrets.GAMEASSEMBLYDOWNLOADPATH }}'
-  IL2CPP_RESOURCE_URL: '${{ secrets.IL2CPP_GAMEASSEMBLYDOWNLOADPATH }}'
-  DOWNLOAD_PATH: '.\\res.zip'
+permissions:
+  contents: read
+
+concurrency:
+  group: mod-build-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: pwsh
 
 jobs:
-  build_bepinex_mono:
+  checks:
+    name: Secret-free CI checks
     runs-on: windows-latest
-
+    timeout-minutes: 10
     steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-    - name: Get version
-      id: get-version
-      shell: pwsh
-      run: |
-        $version = git describe --tags
-        $version = $version -replace "^v", "" -replace '([0-9]+\.?)-([0-9]+)-(.+)', '$1-$2.$3'
-        echo "version=$version" >> $env:GITHUB_OUTPUT
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 6.0.x
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Download Game Assembly
-      run: |
-        $progressPreference = 'SilentlyContinue'
-        Invoke-WebRequest -Uri $env:RESOURCE_URL -OutFile $env:DOWNLOAD_PATH
-    - name: Extract Game Assembly
-      run: Expand-Archive -Path "$env:DOWNLOAD_PATH" -DestinationPath "$env:gameAssemblyPath" -Force
-    - name: Build
-      shell: pwsh
-      run: |
-        $projectPath = "$env:projectName.csproj"
-        $outputPath = "$env:outputPath"
-        $GameAssemblyPath = "$env:gameAssemblyPath"
-        $BepInExPluginVersion = "${{steps.get-version.outputs.version}}" -replace '-([0-9]+).(.+)', ''
-        dotnet build $projectPath --configuration Release /p:GameAssemblyPath=$GameAssemblyPath /p:Version=${{steps.get-version.outputs.version}} /p:BepInExPluginVersion=$BepInExPluginVersion --output $outputPath
-    - name: Copy artifact
-      shell: pwsh
-      run: |
-        $sourceFiles = @(
-            ".\$env:outputPath\CSFFCardDetailTooltip.dll",
-            ".\README.md",
-            ".\LICENSE"
-        )
-        New-Item -ItemType Directory -Force -Path .\artifact
-        foreach ($file in $sourceFiles) {
-          Copy-Item -Path "$file" -Destination .\artifact
-        }
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: CSFFCardDetailTooltip-${{steps.get-version.outputs.version}}
-        path: ./artifact/
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.x
+      - name: Validate scripts, versions and session serialization
+        run: ./tools/Test-CI.ps1
+      - name: Explain pull-request coverage
+        if: github.event_name == 'pull_request'
+        run: |
+          'PR checks do not download licensed game assemblies or compile the mod. The authenticated build runs after merge or by maintainer dispatch; it does not build PR refs.' >> $env:GITHUB_STEP_SUMMARY
 
-  build_melon_il2cpp_android:
-    if: false  # disable android build
+  build:
+    name: Build against Steam assemblies
+    needs: checks
+    if: github.event_name != 'pull_request' && github.actor != 'dependabot[bot]'
     runs-on: windows-latest
-
+    timeout-minutes: 25
+    environment: steam-build
     steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-    - name: Get version
-      id: get-version
-      shell: pwsh
-      run: |
-        $version = git describe --tags
-        $version = $version -replace "^v", "" -replace '([0-9]+\.?)-([0-9]+)-(.+)', '$1-$2.$3'
-        echo "version=$version" >> $env:GITHUB_OUTPUT
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 6.0.x
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Download Game Assembly
-      run: |
-        $progressPreference = 'SilentlyContinue'
-        Invoke-WebRequest -Uri $env:IL2CPP_RESOURCE_URL -OutFile $env:DOWNLOAD_PATH
-    - name: Extract Game Assembly
-      run: Expand-Archive -Path "$env:DOWNLOAD_PATH" -DestinationPath "$env:gameAssemblyPath" -Force
-    - name: Build
-      shell: pwsh
-      run: |
-        $projectPath = "$env:projectName.csproj"
-        $outputPath = "$env:outputPath"
-        $GameAssemblyPath = "$env:gameAssemblyPath"
-        $BepInExPluginVersion = "${{steps.get-version.outputs.version}}" -replace '-([0-9]+).(.+)', ''
-        dotnet build $projectPath --configuration Release-MelonLoader /p:GameAssemblyPath=$GameAssemblyPath /p:MelonLoaderAssemblyPath=$GameAssemblyPath /p:AssemblyUnhollowerAssemblyPath=$GameAssemblyPath /p:Version=${{steps.get-version.outputs.version}} /p:BepInExPluginVersion=$BepInExPluginVersion --output $outputPath
-    - name: Copy artifact
-      shell: pwsh
-      run: |
-        $sourceFiles = @(
-            ".\$env:outputPath\CSFFCardDetailTooltip.dll",
-            ".\README.md",
-            ".\LICENSE"
-        )
-        New-Item -ItemType Directory -Force -Path .\artifact
-        foreach ($file in $sourceFiles) {
-          Copy-Item -Path "$file" -Destination .\artifact
-        }
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: CSFFCardDetailTooltip_Android-${{steps.get-version.outputs.version}}
-        path: ./artifact/
-
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.x
+      - name: Resolve project and release version
+        id: version
+        run: |
+          $version = ./tools/Get-BuildVersion.ps1
+          "package=$($version.PackageVersion)" >> $env:GITHUB_OUTPUT
+          "plugin=$($version.PluginVersion)" >> $env:GITHUB_OUTPUT
+      - name: Prepare pinned Steam downloader
+        id: downloader
+        run: |
+          "NUGET_PACKAGES=$env:RUNNER_TEMP\nuget" >> $env:GITHUB_ENV
+          $dll = ./tools/Get-DepotDownloader.ps1 -Destination "$env:RUNNER_TEMP\depotdownloader"
+          "dll=$dll" >> $env:GITHUB_OUTPUT
+          dotnet build tools/SteamSession/SteamSession.csproj -c Release --nologo
+          if ($LASTEXITCODE -ne 0) { throw 'Steam session helper build failed.' }
+      - name: Download only Windows managed assemblies
+        id: game
+        env:
+          STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
+          STEAM_SESSION_B64: ${{ secrets.STEAM_SESSION_B64 }}
+          REQUESTED_BRANCH: ${{ inputs.steam_branch || 'openbetabranch' }}
+          REQUESTED_MANIFEST: ${{ inputs.steam_manifest }}
+          DOWNLOADER_DLL: ${{ steps.downloader.outputs.dll }}
+        run: |
+          ./tools/Get-SteamGameAssemblies.ps1 -Branch $env:REQUESTED_BRANCH -Manifest $env:REQUESTED_MANIFEST -Destination "$env:RUNNER_TEMP\steam-game" -DownloaderPath $env:DOWNLOADER_DLL
+      - name: Build mod and check game references
+        env:
+          GAME_MANAGED: ${{ steps.game.outputs.managed }}
+          PACKAGE_VERSION: ${{ steps.version.outputs.package }}
+          PLUGIN_VERSION: ${{ steps.version.outputs.plugin }}
+        run: |
+          dotnet build CSFFCardDetailTooltip.csproj -c Release "-p:GameAssemblyPath=$env:GAME_MANAGED" "-p:Version=$env:PACKAGE_VERSION" "-p:BepInExPluginVersion=$env:PLUGIN_VERSION" -o bin/ci --nologo
+          if ($LASTEXITCODE -ne 0) { throw 'Mod build failed.' }
+          ./tools/Test-GameCompatibility.ps1 -GameAssemblyPath $env:GAME_MANAGED -PluginPath bin/ci/CSFFCardDetailTooltip.dll -CecilPath "$env:NUGET_PACKAGES\mono.cecil\0.11.4\lib\netstandard2.0\Mono.Cecil.dll"
+      - name: Package mod and provenance
+        env:
+          PACKAGE_VERSION: ${{ steps.version.outputs.package }}
+          PLUGIN_VERSION: ${{ steps.version.outputs.plugin }}
+        run: |
+          New-Item -ItemType Directory -Path artifact | Out-Null
+          Copy-Item bin/ci/CSFFCardDetailTooltip.dll, README.md, LICENSE -Destination artifact
+          $info = Get-Content "$env:RUNNER_TEMP\steam-game\game-build.json" -Raw | ConvertFrom-Json -AsHashtable
+          $info.commit = $env:GITHUB_SHA
+          $info.packageVersion = $env:PACKAGE_VERSION
+          $info.pluginVersion = $env:PLUGIN_VERSION
+          $info | ConvertTo-Json | Set-Content artifact/game-build.json -Encoding utf8NoBOM
+          "Built against $($info.branch), depot $($info.depotId), manifest $($info.manifestId). Assembly SHA256: $($info.assemblySha256). Static compatibility passed; this does not replace an in-game check." >> $env:GITHUB_STEP_SUMMARY
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: CSFFCardDetailTooltip-${{ steps.version.outputs.package }}-${{ inputs.steam_branch || 'openbetabranch' }}
+          path: artifact/
+          if-no-files-found: error
+          retention-days: 14
