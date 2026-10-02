@@ -107,3 +107,15 @@ CSFFCardDetailTooltip.Encounter.Minor,Minor,轻微
 CSFFCardDetailTooltip.Encounter.Medium,Medium,中等
 CSFFCardDetailTooltip.Encounter.Serious,Serious,沉重
 CSFFCardDetailTooltip.Encounter.AttackDefenseRatio,Attack-Defense Ratio,攻防比
+CSFFCardDetailTooltip.AdditionalDurabilityChanges,Additional durability changes,额外耐久变化
+CSFFCardDetailTooltip.FinalDuration,Final duration,最终耗时
+CSFFCardDetailTooltip.Minimum,Minimum,下限
+CSFFCardDetailTooltip.Maximum,Maximum,上限
+CSFFCardDetailTooltip.DuringAction,During this action only,仅在行动期间生效
+CSFFCardDetailTooltip.PerTick,Per action tick,每个行动时间单位
+CSFFCardDetailTooltip.AssociatedNPC,Associated NPC,关联角色
+CSFFCardDetailTooltip.WithoutAmmo,Before ammunition bonuses,未计入弹药加成
+CSFFCardDetailTooltip.BeforeTargetBonuses,Current condition and skills; before target and encounter bonuses,当前状态和技能数值（未计入目标及遭遇战加成）
+CSFFCardDetailTooltip.DirectWoundFatality,Direct wound fatality on hit,命中后由伤口直接失血致死的概率
+CSFFCardDetailTooltip.RecipeAverage,Recipe (average per tick),配方（每时间单位平均值）
+CSFFCardDetailTooltip.NoAttack,Does not deal attack damage,不造成攻击伤害

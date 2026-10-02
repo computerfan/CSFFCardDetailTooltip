@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using HarmonyLib;
 using UnityEngine;
 using static CSFFCardDetailTooltip.Utils;
@@ -10,6 +11,25 @@ namespace CSFFCardDetailTooltip;
 internal class Action
 {
     public static TooltipText ActionTooltip = new();
+    private static readonly ConditionalWeakTable<DismantleActionButton, ActionContext> ButtonActions = new();
+
+    private sealed class ActionContext
+    {
+        public DismantleCardAction Action;
+        public InGameCardBase Card;
+    }
+
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(DismantleActionButton), "Setup")]
+    public static void RememberButtonAction(DismantleActionButton __instance, DismantleCardAction _Action,
+        InGameCardBase _Card)
+    {
+        // Setup can recurse for alternate actions. The innermost call is the displayed action.
+        // Buttons without drops have an empty DropReport, so it cannot identify their action.
+        ActionContext context = ButtonActions.GetValue(__instance, _ => new ActionContext());
+        context.Action = _Action;
+        context.Card = _Card;
+    }
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(DismantleActionButton), "OnHoverEnter")]
@@ -22,7 +42,8 @@ internal class Action
 
         if (dropReport.FromCard != null && dropReport.FromAction != null &&
             dropReport.FromAction.HasSuccessfulDrop &&
-            dropReport.DropsInfo.Length > 0) texts.Add(FormatCardDropList(dropReport, dropReport.FromCard));
+            dropReport.DropsInfo != null && dropReport.DropsInfo.Length > 0)
+            texts.Add(FormatCardDropList(dropReport, dropReport.FromCard));
         InspectionPopup popup = __instance.GetComponentInParent<InspectionPopup>();
         ExplorationPopup explorationPopup = __instance.GetComponentInParent<ExplorationPopup>();
         BlueprintConstructionPopup blueprintConstructionPopup = __instance.GetComponentInParent<BlueprintConstructionPopup>();
@@ -32,7 +53,12 @@ internal class Action
         DismantleCardAction action = null;
         SpecialActionSet actionSet = null;
 
-        if (popup && popup.CurrentCard)
+        if (ButtonActions.TryGetValue(__instance, out ActionContext context))
+        {
+            action = context.Action;
+            currentCard = context.Card;
+        }
+        else if (popup && popup.CurrentCard)
         {
             currentCard = popup.CurrentCard.ContainedLiquid ?? popup.CurrentCard;
             if (currentCard.IsBlueprintInstance)
@@ -117,7 +143,7 @@ internal class Action
             if ((dropReport.DropsInfo == null || dropReport.DropsInfo.Length == 0) &&
                 action.ProducedCards != null && action.ProducedCards.Length > 0)
             {
-                dropReport = gm.GetCollectionDropsReport(action, currentCard, null, InGameNPCOrPlayer.PlayerAgent, true);
+                dropReport = CollectionDropReportPreview.Create(action, currentCard, null, InGameNPCOrPlayer.PlayerAgent);
                 texts.Add(FormatCardDropList(dropReport, currentCard, action: action));
             }
 
@@ -141,33 +167,36 @@ internal class Action
     public static void DismantleActionButtonOnHoverExitPatch(DismantleActionButton __instance)
     {
         Tooltip.RemoveTooltip(ActionTooltip);
-        Tooltip.Instance.TooltipContent.pageToDisplay = 1;
+        if (Tooltip.Instance) Tooltip.Instance.TooltipContent.pageToDisplay = 1;
     }
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(DismantleActionButton), "OnDisable")]
     public static void DismantleActionButtonOnDisablePatch(DismantleActionButton __instance)
     {
+        ButtonActions.Remove(__instance);
         Tooltip.RemoveTooltip(ActionTooltip);
-        Tooltip.Instance.TooltipContent.pageToDisplay = 1;
+        if (Tooltip.Instance) Tooltip.Instance.TooltipContent.pageToDisplay = 1;
     }
 
     public static string FormatCardDropList(CollectionDropReport report, InGameCardBase fromCard, bool withStat = true,
         bool withCard = true, bool withDuability = true, CardAction action = null, int indent = 0)
     {
         List<string> texts = new();
+        if (report.DropsInfo == null) return string.Empty;
+        action = report.FromAction ?? action;
         for (int i = 0; i < report.DropsInfo.Length; i++)
         {
-            float dropRate = report.GetDropPercent(i, withStat, withCard, withDuability, InGameNPCOrPlayer.PlayerAgent);
+            float dropRate = report.GetDropPercent(i, withStat, withCard, withDuability, _WithNPCStats: true);
             if (Plugin.HideImpossibleDropSet && report.DropsInfo.Length != 1 && dropRate < 0.00001 &&
                 (!report.DropsInfo[i].IsSuccess || report.DropsInfo[i].FinalWeight < -10000)) continue;
             string dropCardTexts = report.DropsInfo[i].Drops.Where(c => c != null).GroupBy(
                     c => new { c.Card.CardType, c.Card.CardName }, c => c,
                     (k, cs) => new { name = k.CardName.ToString(), count = cs.Count(), type = k.CardType })
                 .Select(r => $"{ColorFloat(r.count)} ({r.type}){r.name}").Join();
-            if (action != null && action.ProducedCards != null && action.ProducedCards[0].DropsLiquid)
+            if (action?.ProducedCards != null && i < action.ProducedCards.Length && action.ProducedCards[i].DropsLiquid)
             {
-                LiquidDrop currentLiquidDrop = action.ProducedCards[0].CurrentLiquidDrop;
+                LiquidDrop currentLiquidDrop = action.ProducedCards[i].CurrentLiquidDrop;
                 string liquidDropText =
                     $"{FormatMinMaxValue(currentLiquidDrop.Quantity)} ({currentLiquidDrop.LiquidCard.CardType}){currentLiquidDrop.LiquidCard.CardName.ToString()}";
                 dropCardTexts = report.DropsInfo[i].Drops.Length == 0
@@ -213,6 +242,10 @@ internal class Action
                                 : "Unknown card (possibly environment)",
                             4 + indent));
                 };
+            if (report.DropsInfo[i].NPCStatWeightMods != null)
+                foreach (var modifier in report.DropsInfo[i].NPCStatWeightMods)
+                    if (modifier.Stat && modifier.BonusWeight != 0)
+                        texts.Add(FormatTooltipEntry(modifier.BonusWeight, $"NPC: {modifier.Stat.GameName}", 4 + indent));
             if (withDuability)
             {
                 if (report.DropsInfo[i].DurabilitiesWeightMods.SpoilageWeight != 0)

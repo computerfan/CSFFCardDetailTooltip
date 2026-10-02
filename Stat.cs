@@ -9,7 +9,8 @@ namespace CSFFCardDetailTooltip;
 
 internal class Stat
 {
-    [HarmonyPostfix]
+    // Populate the tooltip before TooltipProvider adds it to the visible list.
+    [HarmonyPrefix]
     [HarmonyPatch(typeof(TooltipProvider), "OnHoverEnter")]
     public static void StatStatusGraphicsPatch(TooltipProvider __instance)
     {
@@ -60,19 +61,23 @@ internal class Stat
             rateModsTexts.Add(FormatRateEntry(stat.CurrentBaseRate,
                 new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Stat.Base", DefaultText = "Base" }.ToString()));
         foreach (StatModifierSource modifierSource in stat.ModifierSources)
-            if (modifierSource.ValidNumbers && modifierSource.ValidSource)
+            if (modifierSource.ValidSource)
             {
                 string source = GetModifierSourceName(modifierSource);
                 if (modifierSource.Rate != 0) rateModsTexts.Add(FormatRateEntry(modifierSource.Rate, source));
                 if (modifierSource.Value != 0) valueModsTexts.Add(FormatTooltipEntry(modifierSource.Value, source, 2));
+                if (modifierSource.MinValue != 0) valueModsTexts.Add(FormatTooltipEntry(modifierSource.MinValue,
+                    $"{source} ({LcStr("CSFFCardDetailTooltip.Minimum", "Minimum")})", 2));
+                if (modifierSource.MaxValue != 0) valueModsTexts.Add(FormatTooltipEntry(modifierSource.MaxValue,
+                    $"{source} ({LcStr("CSFFCardDetailTooltip.Maximum", "Maximum")})", 2));
             }
 
         texts.Add(FormatBasicEntry(
-            $"{stat.SimpleCurrentValue:0.##}: [{stat.StatModel.MinMaxValue.x:0.##}, {stat.StatModel.MinMaxValue.y:0.##}]",
+            $"{stat.SimpleCurrentValue:0.##}: [{stat.CurrentMinMaxValue.x:0.##}, {stat.CurrentMinMaxValue.y:0.##}]",
             stat.StatModel.GameName));
         if (valueModsTexts.Count > 0) texts.Add(valueModsTexts.Join(delimiter: "\n"));
-        texts.Add(FormatRate(stat.SimpleRatePerTick, stat.SimpleCurrentValue, stat.StatModel.MinMaxValue.y,
-            stat.StatModel.MinMaxValue.x));
+        texts.Add(FormatRate(stat.SimpleRatePerTick, stat.SimpleCurrentValue, stat.CurrentMinMaxValue.y,
+            stat.CurrentMinMaxValue.x));
         if (rateModsTexts.Count > 0) texts.Add(rateModsTexts.Join(delimiter: "\n"));
 
         if (stat.CurrentStatuses != null && stat.CurrentStatuses.Count > 0)

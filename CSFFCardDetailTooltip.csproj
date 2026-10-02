@@ -5,7 +5,7 @@
     <AssemblyName>CSFFCardDetailTooltip</AssemblyName>
     <Description>CSFF Card Detail Tooltip Mod (Formerly known as Detailed Card Progress)</Description>
     <Product>CSFFCardDetailTooltipMod</Product>
-    <Version>1.0.10</Version>
+    <Version>1.0.11</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <PackageId>space.cfan.CSFFCardDetailTooltip</PackageId>
@@ -23,6 +23,8 @@
       https://nuget.samboy.dev/v3/index.json
     </RestoreAdditionalProjectSources>
     <RootNamespace>CSFFCardDetailTooltip</RootNamespace>
+    <!-- An old DLL under Assembly/ must never override the explicit HintPath. -->
+    <AssemblySearchPath_UseCandidateAssemblyFiles>false</AssemblySearchPath_UseCandidateAssemblyFiles>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MelonLoader|AnyCPU'">
@@ -37,6 +39,8 @@
 
     <ItemGroup>
       <Compile Remove="android\**" />
+      <Compile Remove="tools\**" />
+      <None Remove="Assembly\**;Rely\**" />
       <EmbeddedResource Remove="android\**" />
       <None Remove="android\**" />
     </ItemGroup>
@@ -137,4 +141,8 @@
             <HintPath>$(AssemblyUnhollowerAssemblyPath)\UnhollowerRuntimeLib.dll</HintPath>
         </Reference>
     </ItemGroup>
+    <Target Name="ValidateGameAssemblyPath" BeforeTargets="ResolveAssemblyReferences">
+      <Error Condition="!Exists('$(GameAssemblyPath)\Assembly-CSharp.dll')"
+             Text="GameAssemblyPath must point to the target game's Managed directory containing Assembly-CSharp.dll." />
+    </Target>
 </Project>

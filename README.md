@@ -16,7 +16,28 @@ See <https://docs.bepinex.dev/v5.4.21/articles/user_guide/installation/index.htm
 
 - Download latest release from <https://github.com/computerfan/CSFFCardDetailTooltip/releases>. 
 
-- Extract `CSFFDetailedCardProgress.dll` to `BepInEx/plugins folder`.
+- Extract `CSFFCardDetailTooltip.dll` to `BepInEx/plugins folder`.
+
+## Compatibility
+
+The unreleased 1.0.11 candidate targets the Windows open beta `EA_beta_0.68b`.
+Compatibility with older stable versions and Android has not been verified.
+
+## Tooltip notes
+
+- Cooking rates are averages; completion estimates use the current rate and can
+  change when processing pauses or conditions change.
+- Drop percentages describe possible outcome groups. Displayed quantities are
+  examples, and trap timers do not predict when an animal will arrive.
+- Wound-fatality estimates cover immediate wound blood loss after a hit, excluding
+  later poison and other secondary effects.
+- Player-action tooltips do not predict an NPC's autonomous work schedule.
+
+## Credits
+
+Thanks to [Shosetsu](https://github.com/Shosetsu/CSFFCardDetailTooltip) and
+[SamaraFleurety](https://github.com/SamaraFleurety/CSFFCardDetailTooltip) for their
+fork updates and compatibility fixes.
 
 ## Settings (Optional)
 
@@ -36,6 +57,28 @@ The configuration file can be found at `/BepInEx/config/CSFFCardDetailTooltip.cf
 __Toggle Note__: When using the hotkey to enable/disable the detailed tooltips, the tooltips will not be updated until the user moves the mouse off of a card.
 
 # Change Log
+
+## 1.0.11 (unreleased; open-beta candidate)
+
+- Update compatibility with open beta `EA_beta_0.68b`, including recipe lookup,
+  blueprint weight, drop probabilities and durability visibility.
+- Show individual weapon moves with condition and skill modifiers. Mark feints as
+  non-damaging and clarify which bonuses require ammunition or an encounter.
+- Include armour quality, hardness and liquid coatings in combat previews, and
+  account for separate damage rolls and target-specific bonuses.
+- Show interpolated action effects, temporary stat changes and NPC stat effects.
+  Include both cards' time modifiers and respect minimum and zero-cost actions.
+- Restore detailed tooltips for alternate actions and actions with no card drops.
+- Correct recipe averages, paused processing and nested liquid containers so
+  ingredient effects are not applied to the container itself.
+- Use the correct ingredient and cooker for recipe drops, and show liquid output
+  from the corresponding outcome in actions with multiple results.
+- Include durability scaling in passive-effect breakdowns and correctly compound
+  stacked multipliers, including progress-rate multipliers.
+- Display modified stat limits and effective durability maxima; prepare status
+  tooltips before they appear.
+- Preserve game randomness, action/drop caches and travel state during previews.
+- Prevent stale local game DLLs from overriding the configured build references.
 
 ## 1.0.0
 - Update for CSFF

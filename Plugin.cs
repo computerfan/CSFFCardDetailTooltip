@@ -1,4 +1,4 @@
-﻿#if MELON_LOADER
+#if MELON_LOADER
 using MelonLoader;
 #else
 using BepInEx;
@@ -195,7 +195,7 @@ namespace CSFFCardDetailTooltip
                         : __instance;
                 if (action.ProducedCards != null)
                 {
-                    CollectionDropReport dropReport = gm.GetCollectionDropsReport(action, currentCard, droppedCard, InGameNPCOrPlayer.PlayerAgent, true);
+                    CollectionDropReport dropReport = CollectionDropReportPreview.Create(action, currentCard, droppedCard, InGameNPCOrPlayer.PlayerAgent);
                     texts.Add(Action.FormatCardDropList(dropReport, currentCard, action: action));
                 }
 
@@ -217,10 +217,10 @@ namespace CSFFCardDetailTooltip
             {
                 foreach (CookingCardStatus cookingstatus in __instance.CookingCards)
                 {
-                    if (cookingstatus == null || cookingstatus.Card == null) continue;
+                    if (cookingstatus == null) continue;
                     CookingRecipe recipe =
-                        cardModel.GetRecipeForCard(cookingstatus.Card.CardModel, cookingstatus.Card, __instance);
-                    if (recipe == null) continue;
+                        cardModel.GetRecipeForCard(cookingstatus.Card, __instance);
+                    if (!CookingRecipePreview.IsActive(recipe, cookingstatus.Card, __instance)) continue;
                     if (!RecipesShowTargetDuration && recipe.MinDuration != recipe.MaxDuration)
                     {
                         texts.Add(FormatBasicEntry(
@@ -239,7 +239,7 @@ namespace CSFFCardDetailTooltip
                     {
                         CardOnCardAction cardOnCardAction = recipe.GetResult(cookingstatus.Card);
                         CollectionDropReport dropReport =
-                            gm.GetCollectionDropsReport(cardOnCardAction, __instance, null, InGameNPCOrPlayer.PlayerAgent, true);
+                            CollectionDropReportPreview.Create(cardOnCardAction, cookingstatus.Card, __instance, InGameNPCOrPlayer.Null);
                         texts.Add("<size=70%>" + Action.FormatCardDropList(dropReport, __instance, indent: 2) +
                                   "</size>");
                     }
@@ -256,7 +256,7 @@ namespace CSFFCardDetailTooltip
 
                 if (cardModel.CardType == CardTypes.Blueprint)
                 {
-                    texts.Add(FormatTooltipEntry(cardModel.BlueprintResultWeight,
+                    texts.Add(FormatTooltipEntry(cardModel.BlueprintResultWeight(InGameNPCOrPlayer.PlayerAgent),
                         new LocalizedString
                         {
                             LocalizationKey = "CSFFCardDetailTooltip.BlueprintResultWeight",
@@ -265,7 +265,7 @@ namespace CSFFCardDetailTooltip
                 }
                 else
                 {
-                    texts.Add(FormatTooltipEntry(cardModel.ObjectWeight, cardModel.CardName.ToString(), 2));
+                    texts.Add(FormatTooltipEntry(cardModel.GetBaseWeight(__instance), cardModel.CardName.ToString(), 2));
                     if ((bool)graphicsM && graphicsM.CharacterWindow.HasCardEquipped(__instance))
                         texts.Add(FormatTooltipEntry(cardModel.WeightReductionWhenEquipped,
                             new LocalizedString
@@ -305,7 +305,7 @@ namespace CSFFCardDetailTooltip
                     }
 
                     if (cardModel.CardType == CardTypes.Blueprint)
-                        texts.Add(FormatTooltipEntry(-cardModel.BlueprintResultWeight,
+                        texts.Add(FormatTooltipEntry(-cardModel.BlueprintResultWeight(InGameNPCOrPlayer.PlayerAgent),
                             new LocalizedString
                             {
                                 LocalizationKey = "CSFFCardDetailTooltip.WeightReduction",
@@ -321,33 +321,32 @@ namespace CSFFCardDetailTooltip
             foreach (PassiveEffect effect in __instance.PassiveEffects.Values)
             {
                 if (string.IsNullOrWhiteSpace(effect.EffectName)) continue;
-                int multiplier = effect.EffectStacksWithRequiredCards ? effect.CurrentStack : 1;
                 string entryValue = effect.EffectStacksWithRequiredCards
                     ? $"{effect.CurrentStack}x {effect.EffectName}"
                     : effect.EffectName;
                 if ((bool)cardModel.SpoilageTime && (bool)effect.SpoilageRateModifier)
-                    baseSpoilageRate.Add(FormatRateEntry(multiplier * effect.SpoilageRateModifier.FloatValue,
+                    baseSpoilageRate.Add(PassiveEffectPreview.FormatRateEntry(effect, effect.SpoilageRateModifier.FloatValue,
                         entryValue, GetEffectMultiply(effect, "MultiplySpoilageRate")));
                 if ((bool)cardModel.UsageDurability && (bool)effect.UsageRateModifier)
-                    baseUsageRate.Add(FormatRateEntry(multiplier * effect.UsageRateModifier.FloatValue, entryValue, GetEffectMultiply(effect, "MultiplyUsageRate")));
+                    baseUsageRate.Add(PassiveEffectPreview.FormatRateEntry(effect, effect.UsageRateModifier.FloatValue, entryValue, GetEffectMultiply(effect, "MultiplyUsageRate")));
                 if ((bool)cardModel.FuelCapacity && (bool)effect.FuelRateModifier)
-                    baseFuelRate.Add(FormatRateEntry(multiplier * effect.FuelRateModifier.FloatValue, entryValue, GetEffectMultiply(effect, "MultiplyFuelRate")));
+                    baseFuelRate.Add(PassiveEffectPreview.FormatRateEntry(effect, effect.FuelRateModifier.FloatValue, entryValue, GetEffectMultiply(effect, "MultiplyFuelRate")));
                 if ((bool)cardModel.Progress && (bool)effect.ConsumableChargesModifier)
-                    baseConsumableRate.Add(FormatRateEntry(multiplier * effect.ConsumableChargesModifier.FloatValue,
-                        entryValue));
+                    baseConsumableRate.Add(PassiveEffectPreview.FormatRateEntry(effect, effect.ConsumableChargesModifier.FloatValue,
+                        entryValue, GetEffectMultiply(effect, "MultiplyConsumableChargesRate")));
                 if (__instance.IsLiquidContainer && __instance.ContainedLiquid && effect.LiquidRateModifier != 0)
-                    baseEvaporationRate.Add(FormatRateEntry(multiplier * effect.LiquidRateModifier, entryValue));
+                    baseEvaporationRate.Add(PassiveEffectPreview.FormatRateEntry(effect, effect.LiquidRateModifier, entryValue));
                 if ((bool)cardModel.SpecialDurability1 && (bool)effect.Special1RateModifier)
-                    baseSpecial1Rate.Add(FormatRateEntry(multiplier * effect.Special1RateModifier.FloatValue,
+                    baseSpecial1Rate.Add(PassiveEffectPreview.FormatRateEntry(effect, effect.Special1RateModifier.FloatValue,
                         entryValue, GetEffectMultiply(effect, "MultiplySpecial1Rate")));
                 if ((bool)cardModel.SpecialDurability2 && (bool)effect.Special2RateModifier)
-                    baseSpecial2Rate.Add(FormatRateEntry(multiplier * effect.Special2RateModifier.FloatValue,
+                    baseSpecial2Rate.Add(PassiveEffectPreview.FormatRateEntry(effect, effect.Special2RateModifier.FloatValue,
                         entryValue, GetEffectMultiply(effect, "MultiplySpecial2Rate")));
                 if ((bool)cardModel.SpecialDurability3 && (bool)effect.Special3RateModifier)
-                    baseSpecial3Rate.Add(FormatRateEntry(multiplier * effect.Special3RateModifier.FloatValue,
+                    baseSpecial3Rate.Add(PassiveEffectPreview.FormatRateEntry(effect, effect.Special3RateModifier.FloatValue,
                         entryValue, GetEffectMultiply(effect, "MultiplySpecial3Rate")));
                 if ((bool)cardModel.SpecialDurability4 && (bool)effect.Special4RateModifier)
-                    baseSpecial4Rate.Add(FormatRateEntry(multiplier * effect.Special4RateModifier.FloatValue,
+                    baseSpecial4Rate.Add(PassiveEffectPreview.FormatRateEntry(effect, effect.Special4RateModifier.FloatValue,
                         entryValue, GetEffectMultiply(effect, "MultiplySpecial4Rate")));
             }
 
@@ -355,20 +354,20 @@ namespace CSFFCardDetailTooltip
                 foreach (PassiveEffect effect in __instance.ContainedLiquid.PassiveEffects.Values)
                 {
                     if (effect.SpoilageRateModifier != 0)
-                        baseSpoilageRate.Add(FormatRateEntry(effect.SpoilageRateModifier, effect.EffectName, GetEffectMultiply(effect, "MultiplySpoilageRate")));
+                        baseSpoilageRate.Add(PassiveEffectPreview.FormatRateEntry(effect, effect.SpoilageRateModifier, effect.EffectName, GetEffectMultiply(effect, "MultiplySpoilageRate")));
                     if (effect.LiquidRateModifier != 0)
-                        baseEvaporationRate.Add(FormatRateEntry(effect.LiquidRateModifier, effect.EffectName));
+                        baseEvaporationRate.Add(PassiveEffectPreview.FormatRateEntry(effect, effect.LiquidRateModifier, effect.EffectName));
                 }
 
-            CookingRecipe changeRecipe = GetRecipeForCard(__instance);
-            CardStateChange? recipeStateChange = changeRecipe?.IngredientChanges;
+            CookingRecipe changeRecipe = CookingRecipePreview.ActiveIngredientRecipe(__instance);
+            CardStateChange? recipeStateChange = changeRecipe == null ? null : CookingRecipePreview.AverageRecipeChanges(changeRecipe);
+            CookingRecipe liquidRecipe = CookingRecipePreview.ActiveIngredientRecipe(__instance.ContainedLiquid);
+            CardStateChange? liquidRecipeChange = liquidRecipe == null ? null : CookingRecipePreview.AverageRecipeChanges(liquidRecipe);
 
             if (cardModel.SpoilageTime &&
-                cardModel.SpoilageTime.Show(__instance.ContainedLiquid, __instance.CurrentSpoilage))
+                cardModel.SpoilageTime.Show(__instance.ContainedLiquid, __instance.CurrentSpoilage, __instance))
             {
-                texts.Add(FormatProgressAndRate(__instance.CurrentSpoilage, cardModel.SpoilageTime.MaxValue == 0
-                        ? cardModel.SpoilageTime.FloatValue
-                        : cardModel.SpoilageTime.MaxValue,
+                texts.Add(FormatProgressAndRate(__instance.CurrentSpoilage, cardModel.SpoilageTime.Max,
                     string.IsNullOrEmpty(cardModel.SpoilageTime.CardStatName)
                         ? new LocalizedString
                         { LocalizationKey = "CSFFCardDetailTooltip.Spoilage", DefaultText = "Spoilage" }
@@ -397,21 +396,20 @@ namespace CSFFCardDetailTooltip
                         { LocalizationKey = "CSFFCardDetailTooltip.Equipped", DefaultText = "Equipped" }));
                 if ((recipeStateChange?.SpoilageChange.x ?? 0) != 0)
                     texts.Add(FormatRateEntry(recipeStateChange?.SpoilageChange.x ?? 0,
-                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
+                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.RecipeAverage", DefaultText = "Recipe (average per tick)" }.ToString()} {changeRecipe.ActionName}"));
             }
 
             // liquid spoilage temp fix
-            if (__instance.ContainedLiquid?.CardModel?.SpoilageTime)
+            if (__instance.ContainedLiquid?.CardModel?.SpoilageTime &&
+                __instance.ContainedLiquid.CardModel.SpoilageTime.Show(false, __instance.ContainedLiquid.CurrentSpoilage, __instance.ContainedLiquid))
             {
                 texts.Add(FormatProgressAndRate(__instance.ContainedLiquid.CurrentSpoilage,
-                    __instance.ContainedLiquid.CardModel.SpoilageTime.MaxValue == 0
-                        ? __instance.ContainedLiquid.CardModel.SpoilageTime.FloatValue
-                        : __instance.ContainedLiquid.CardModel.SpoilageTime.MaxValue,
+                    __instance.ContainedLiquid.CardModel.SpoilageTime.Max,
                     string.IsNullOrEmpty(__instance.ContainedLiquid.CardModel.SpoilageTime.CardStatName)
                         ? new LocalizedString
                         { LocalizationKey = "CSFFCardDetailTooltip.Spoilage", DefaultText = "Spoilage" }
                         : __instance.ContainedLiquid.CardModel.SpoilageTime.CardStatName,
-                    __instance.ContainedLiquid.CurrentSpoilageRate + (recipeStateChange?.SpoilageChange.x ?? 0)));
+                    __instance.ContainedLiquid.CurrentSpoilageRate + (liquidRecipeChange?.SpoilageChange.x ?? 0)));
                 if (__instance.ContainedLiquid.CardModel.SpoilageTime.RatePerDaytimePoint != 0)
                     texts.Add(FormatRateEntry(__instance.ContainedLiquid.CardModel.SpoilageTime.RatePerDaytimePoint,
                         new LocalizedString
@@ -435,18 +433,16 @@ namespace CSFFCardDetailTooltip
                     texts.Add(FormatRateEntry(__instance.ContainedLiquid.CardModel.SpoilageTime.ExtraRateWhenEquipped,
                         new LocalizedString
                         { LocalizationKey = "CSFFCardDetailTooltip.Equipped", DefaultText = "Equipped" }));
-                if ((recipeStateChange?.SpoilageChange.x ?? 0) != 0)
-                    texts.Add(FormatRateEntry(recipeStateChange?.SpoilageChange.x ?? 0,
-                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
+                if ((liquidRecipeChange?.SpoilageChange.x ?? 0) != 0)
+                    texts.Add(FormatRateEntry(liquidRecipeChange?.SpoilageChange.x ?? 0,
+                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.RecipeAverage", DefaultText = "Recipe (average per tick)" }.ToString()} {liquidRecipe.ActionName}"));
             }
 
             if (cardModel.UsageDurability &&
-                cardModel.UsageDurability.Show(__instance.ContainedLiquid, __instance.CurrentUsageDurability))
+                cardModel.UsageDurability.Show(__instance.ContainedLiquid, __instance.CurrentUsageDurability, __instance))
             {
                 texts.Add(FormatProgressAndRate(__instance.CurrentUsageDurability,
-                    cardModel.UsageDurability.MaxValue == 0
-                        ? cardModel.UsageDurability.FloatValue
-                        : cardModel.UsageDurability.MaxValue,
+                    cardModel.UsageDurability.Max,
                     string.IsNullOrEmpty(cardModel.UsageDurability.CardStatName)
                         ? new LocalizedString
                         { LocalizationKey = "CSFFCardDetailTooltip.Usage", DefaultText = "Usage" }
@@ -475,13 +471,13 @@ namespace CSFFCardDetailTooltip
                         { LocalizationKey = "CSFFCardDetailTooltip.Equipped", DefaultText = "Equipped" }));
                 if ((recipeStateChange?.UsageChange.x ?? 0) != 0)
                     texts.Add(FormatRateEntry(recipeStateChange?.UsageChange.x ?? 0,
-                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
+                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.RecipeAverage", DefaultText = "Recipe (average per tick)" }.ToString()} {changeRecipe.ActionName}"));
             }
 
             if (cardModel.FuelCapacity &&
-                cardModel.FuelCapacity.Show(__instance.ContainedLiquid, __instance.CurrentFuel))
+                cardModel.FuelCapacity.Show(__instance.ContainedLiquid, __instance.CurrentFuel, __instance))
             {
-                texts.Add(FormatProgressAndRate(__instance.CurrentFuel, cardModel.FuelCapacity.MaxValue,
+                texts.Add(FormatProgressAndRate(__instance.CurrentFuel, cardModel.FuelCapacity.Max,
                     string.IsNullOrEmpty(cardModel.FuelCapacity.CardStatName)
                         ? new LocalizedString
                         { LocalizationKey = "CSFFCardDetailTooltip.Fuel", DefaultText = "Fuel" }
@@ -510,12 +506,12 @@ namespace CSFFCardDetailTooltip
                         { LocalizationKey = "CSFFCardDetailTooltip.Equipped", DefaultText = "Equipped" }));
                 if ((recipeStateChange?.FuelChange.x ?? 0) != 0)
                     texts.Add(FormatRateEntry(recipeStateChange?.FuelChange.x ?? 0,
-                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
+                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.RecipeAverage", DefaultText = "Recipe (average per tick)" }.ToString()} {changeRecipe.ActionName}"));
             }
 
-            if (cardModel.Progress && cardModel.Progress.Show(__instance.ContainedLiquid, __instance.CurrentProgress))
+            if (cardModel.Progress && cardModel.Progress.Show(__instance.ContainedLiquid, __instance.CurrentProgress, __instance))
             {
-                texts.Add(FormatProgressAndRate(__instance.CurrentProgress, cardModel.Progress.MaxValue,
+                texts.Add(FormatProgressAndRate(__instance.CurrentProgress, cardModel.Progress.Max,
                     string.IsNullOrEmpty(cardModel.Progress.CardStatName)
                         ? new LocalizedString
                         { LocalizationKey = "CSFFCardDetailTooltip.Progress", DefaultText = "Progress" }
@@ -545,7 +541,7 @@ namespace CSFFCardDetailTooltip
                         { LocalizationKey = "CSFFCardDetailTooltip.Equipped", DefaultText = "Equipped" }));
                 if ((recipeStateChange?.ChargesChange.x ?? 0) != 0)
                     texts.Add(FormatRateEntry(recipeStateChange?.ChargesChange.x ?? 0,
-                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
+                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.RecipeAverage", DefaultText = "Recipe (average per tick)" }.ToString()} {changeRecipe.ActionName}"));
             }
 
             if (__instance.IsLiquidContainer && __instance.ContainedLiquid)
@@ -569,13 +565,13 @@ namespace CSFFCardDetailTooltip
                                 $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Producing", DefaultText = "Producing" }.ToString()} {__instance.CurrentProducedLiquids.get_Item(i).LiquidCard.CardName.ToString()}"));
                 if ((recipeStateChange?.ModifyLiquid ?? false) && (recipeStateChange?.LiquidQuantityChange.x ?? 0) != 0)
                     texts.Add(FormatRateEntry(recipeStateChange?.LiquidQuantityChange.x ?? 0,
-                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
+                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.RecipeAverage", DefaultText = "Recipe (average per tick)" }.ToString()} {changeRecipe.ActionName}"));
             }
 
             if (cardModel.SpecialDurability1 &&
-                cardModel.SpecialDurability1.Show(__instance.ContainedLiquid, __instance.CurrentSpecial1))
+                cardModel.SpecialDurability1.Show(__instance.ContainedLiquid, __instance.CurrentSpecial1, __instance))
             {
-                texts.Add(FormatProgressAndRate(__instance.CurrentSpecial1, cardModel.SpecialDurability1.MaxValue,
+                texts.Add(FormatProgressAndRate(__instance.CurrentSpecial1, cardModel.SpecialDurability1.Max,
                     string.IsNullOrEmpty(cardModel.SpecialDurability1.CardStatName)
                         ? "SpecialDurability1"
                         : __instance.CardModel.SpecialDurability1.CardStatName,
@@ -603,13 +599,13 @@ namespace CSFFCardDetailTooltip
                         { LocalizationKey = "CSFFCardDetailTooltip.Equipped", DefaultText = "Equipped" }));
                 if ((recipeStateChange?.Special1Change.x ?? 0) != 0)
                     texts.Add(FormatRateEntry(recipeStateChange?.Special1Change.x ?? 0,
-                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
+                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.RecipeAverage", DefaultText = "Recipe (average per tick)" }.ToString()} {changeRecipe.ActionName}"));
             }
 
             if (cardModel.SpecialDurability2 &&
-                cardModel.SpecialDurability2.Show(__instance.ContainedLiquid, __instance.CurrentSpecial2))
+                cardModel.SpecialDurability2.Show(__instance.ContainedLiquid, __instance.CurrentSpecial2, __instance))
             {
-                texts.Add(FormatProgressAndRate(__instance.CurrentSpecial2, cardModel.SpecialDurability2.MaxValue,
+                texts.Add(FormatProgressAndRate(__instance.CurrentSpecial2, cardModel.SpecialDurability2.Max,
                     string.IsNullOrEmpty(cardModel.SpecialDurability2.CardStatName)
                         ? "SpecialDurability2"
                         : __instance.CardModel.SpecialDurability2.CardStatName,
@@ -637,13 +633,13 @@ namespace CSFFCardDetailTooltip
                         { LocalizationKey = "CSFFCardDetailTooltip.Equipped", DefaultText = "Equipped" }));
                 if ((recipeStateChange?.Special2Change.x ?? 0) != 0)
                     texts.Add(FormatRateEntry(recipeStateChange?.Special2Change.x ?? 0,
-                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
+                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.RecipeAverage", DefaultText = "Recipe (average per tick)" }.ToString()} {changeRecipe.ActionName}"));
             }
 
             if (cardModel.SpecialDurability3 &&
-                cardModel.SpecialDurability3.Show(__instance.ContainedLiquid, __instance.CurrentSpecial3))
+                cardModel.SpecialDurability3.Show(__instance.ContainedLiquid, __instance.CurrentSpecial3, __instance))
             {
-                texts.Add(FormatProgressAndRate(__instance.CurrentSpecial3, cardModel.SpecialDurability3.MaxValue,
+                texts.Add(FormatProgressAndRate(__instance.CurrentSpecial3, cardModel.SpecialDurability3.Max,
                     string.IsNullOrEmpty(cardModel.SpecialDurability3.CardStatName)
                         ? "SpecialDurability3"
                         : __instance.CardModel.SpecialDurability3.CardStatName,
@@ -671,13 +667,13 @@ namespace CSFFCardDetailTooltip
                         { LocalizationKey = "CSFFCardDetailTooltip.Equipped", DefaultText = "Equipped" }));
                 if ((recipeStateChange?.Special3Change.x ?? 0) != 0)
                     texts.Add(FormatRateEntry(recipeStateChange?.Special3Change.x ?? 0,
-                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
+                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.RecipeAverage", DefaultText = "Recipe (average per tick)" }.ToString()} {changeRecipe.ActionName}"));
             }
 
             if (cardModel.SpecialDurability4 &&
-                cardModel.SpecialDurability4.Show(__instance.ContainedLiquid, __instance.CurrentSpecial4))
+                cardModel.SpecialDurability4.Show(__instance.ContainedLiquid, __instance.CurrentSpecial4, __instance))
             {
-                texts.Add(FormatProgressAndRate(__instance.CurrentSpecial4, cardModel.SpecialDurability4.MaxValue,
+                texts.Add(FormatProgressAndRate(__instance.CurrentSpecial4, cardModel.SpecialDurability4.Max,
                     string.IsNullOrEmpty(cardModel.SpecialDurability4.CardStatName)
                         ? "SpecialDurability4"
                         : __instance.CardModel.SpecialDurability4.CardStatName,
@@ -705,12 +701,12 @@ namespace CSFFCardDetailTooltip
                         { LocalizationKey = "CSFFCardDetailTooltip.Equipped", DefaultText = "Equipped" }));
                 if ((recipeStateChange?.Special4Change.x ?? 0) != 0)
                     texts.Add(FormatRateEntry(recipeStateChange?.Special4Change.x ?? 0,
-                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Recipe", DefaultText = "Recipe" }.ToString()} {changeRecipe.ActionName}"));
+                        $"{new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.RecipeAverage", DefaultText = "Recipe (average per tick)" }.ToString()} {changeRecipe.ActionName}"));
             }
 
             if (cardModel.IsWeapon)
             {
-                texts.Add(FormatWeaponStats(cardModel.BaseClashValue, cardModel.WeaponDamage, cardModel.WeaponReach));
+                texts.Add(FormatWeaponStats(__instance));
             }
 
             if (texts.Count > 0)
@@ -771,19 +767,5 @@ namespace CSFFCardDetailTooltip
             InGamePlayerWeight = null;
         }
 
-        public static CookingRecipe GetRecipeForCard(InGameCardBase card)
-        {
-            CookingRecipe recipeForCard;
-            if (card.ContainedLiquid != null)
-                recipeForCard = card.CurrentContainer?.CardModel?.GetRecipeForCard(card.ContainedLiquid.CardModel,
-                    card.ContainedLiquid, card.CurrentContainer);
-            else
-                recipeForCard =
-                    card.CurrentContainer?.CardModel?.GetRecipeForCard(card.CardModel, card, card.CurrentContainer);
-            if (recipeForCard != null &&
-                (recipeForCard.IngredientChanges.ModType == CardModifications.DurabilityChanges ||
-                 (card.ContainedLiquid && recipeForCard.IngredientChanges.ModifyLiquid))) return recipeForCard;
-            return null;
-        }
     }
 }

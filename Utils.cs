@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -53,135 +53,54 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
 
     public static string FormatEncounterPlayerAction(GenericEncounterPlayerAction action, EncounterPopup popup, int indent = 0)
     {
-        MeleeClashResultsReport backupCurrentRoundMeleeClashResult = popup.CurrentRoundMeleeClashResult;
-        RangedClashResultReport backupCurrentRoundRangedClashResult = popup.CurrentRoundRangedClashResult;
-        float num = popup.CalculateActionClashChance(action);
-        MeleeClashResultsReport currentRoundMeleeClashResult = popup.CurrentRoundMeleeClashResult;
-        RangedClashResultReport currentRoundRangedClashResult = popup.CurrentRoundRangedClashResult;
-        popup.CurrentRoundMeleeClashResult = backupCurrentRoundMeleeClashResult;
-        popup.CurrentRoundRangedClashResult = backupCurrentRoundRangedClashResult;
-
-        ClashResultsReport commonClashResult = action.ActionRange switch
+        var encounter = popup.CurrentEncounter;
+        if (!encounter || encounter.CurrentEnemyAction == null) return string.Empty;
+        var savedMelee = popup.CurrentRoundMeleeClashResult;
+        var savedRanged = popup.CurrentRoundRangedClashResult;
+        var random = UnityEngine.Random.state;
+        MeleeClashResultsReport melee;
+        RangedClashResultReport ranged;
+        float chance;
+        try
         {
-            ActionRange.Melee => currentRoundMeleeClashResult.CommonClashReport,
-            ActionRange.Ranged => currentRoundRangedClashResult.CommonClashReport,
-            _ => currentRoundMeleeClashResult.CommonClashReport
-        };
-
-        InGameEncounter encounter = popup.CurrentEncounter;
-
-        StringBuilder summary = new($"<size=85%><color=yellow>{LcStr("CSFFCardDetailTooltip.Encounter.ActionPreview", "Action Preview")} {encounter.EnemyName}</color></size>\n");
-        summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.PlayerAction", "Player Action"), action.ActionName, indent: indent + 2));
-        summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.ActionType", "Action Type"), action.ActionType.ToString(), indent: indent + 2));
-        summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.ActionRange", "Action Range"), action.ActionRange.ToString(), indent: indent + 2));
-        summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.ActionSuccessChance", "Action Success Chance"), $"{num * 100f:0.##}%", indent: indent + 2));
-
-        if (action.ActionRange == ActionRange.Melee)
-        {
-            float playerSuccess = currentRoundMeleeClashResult.PlayerSuccessChance;
-            float enemySuccess = currentRoundMeleeClashResult.EnemySuccessChance;
-            summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.PowerComparison", "Power Comparison"), $"{currentRoundMeleeClashResult.CommonClashReport.PlayerClashValue:0.#} : {currentRoundMeleeClashResult.CommonClashReport.EnemyClashValue:0.#}", indent: indent + 2));
-            summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.PlayerAttackHitRate", "Player Attack Hit Rate"), $"{playerSuccess * 100f:0.##}%{(commonClashResult.PlayerCannotFail ? $" <color=green>({LcStr("CSFFCardDetailTooltip.Encounter.GuaranteedHit", "Guaranteed Hit")})</color>" : "")}", indent: indent + 2));
-            summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.EnemyAttackHitRate", "Enemy Attack Hit Rate"), $"{enemySuccess * 100f:0.##}%{(commonClashResult.EnemyCannotFail ? $" <color=red>({LcStr("CSFFCardDetailTooltip.Encounter.GuaranteedHit", "Guaranteed Hit")})</color>" : "")}", indent: indent + 2));
-            if (action.AssociatedCard)
-            {
-                foreach (PlayerEncounterVariable stat in action.AssociatedCard.CardModel.WeaponClashStatInfluences)
-                {
-                    summary.AppendLine(FormatBasicEntry(FormatMinMaxValue(stat.GenerateRandomRange()), stat.Stat.GameName.ToString(), indent: indent + 2));
-                }
-            }
-            if (!action.DoesNotAttack)
-            {
-                Vector2 damage = action.InitialDamage;
-                Vector2 damageStatSum = action.DamageStatSum;
-                Vector2 sizeDamage = new(popup.PlayerSize, popup.PlayerSize);
-
-                summary.AppendLine(FormatBasicEntry(FormatMinMaxValue(damage), LcStr("CSFFCardDetailTooltip.Encounter.DamagePower", "Damage Power"), indent: indent + 2));
-                summary.AppendLine(FormatBasicEntry(FormatMinMaxValue(damageStatSum), LcStr("CSFFCardDetailTooltip.Encounter.StatusDamageBonus", "Status Damage Bonus"), indent: indent + 2));
-                if (action.AssociatedCard)
-                {
-                    foreach (PlayerEncounterVariable stat in action.AssociatedCard.CardModel.WeaponDamageStatInfluences)
-                    {
-                        summary.AppendLine(FormatBasicEntry(FormatMinMaxValue(stat.GenerateRandomRange()), stat.Stat.GameName.ToString(), indent: indent + 2));
-                    }
-                }
-                summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.MeleeSizeDamageBonus", "Melee Size Damage Bonus"), ColorFloat(popup.PlayerSize), indent: indent + 2));
-                summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.DamageType", "Damage Type"), action.DamageTypes.Select(t => t.Name.ToString()).Join(), indent: indent + 2));
-                EncounterPlayerDamageReport damageReport = new()
-                {
-                    SizeDefense = encounter.CurrentEnemySize
-                };
-
-                summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.HitableParts", "Hitable Parts"), ""))
-                    .AppendLine(
-                        $"{FormatPlayerHitResult(encounter, action, popup, damage + damageStatSum + sizeDamage)}");
-            }
-
-            summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.DistanceChange", "Distance Change"), GetDistanceChangeText(action.PreClashDistanceChange), indent: indent + 2));
+            chance = popup.CalculateActionClashChance(action);
+            melee = popup.CurrentRoundMeleeClashResult;
+            ranged = popup.CurrentRoundRangedClashResult;
         }
-        else if (action.ActionRange == ActionRange.Ranged)
+        finally
         {
-            if (encounter.Distant)
-            {
-                summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.PowerComparison", "Power Comparison"), $"{currentRoundRangedClashResult.PlayerClashValue:0.#} : {currentRoundRangedClashResult.EnemyClashValue:0.#}", indent: indent + 2));
-
-                float playerSuccess = currentRoundRangedClashResult.PlayerSuccessChance;
-                float enemySuccess = currentRoundRangedClashResult.EnemySuccessChance;
-                summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.PlayerHitRate", "Player Hit Rate"), $"{playerSuccess * 100f:0.##}%", indent: indent + 2));
-                summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.EnemyHitRate", "Enemy Hit Rate"), $"{enemySuccess * 100f:0.##}%", indent: indent + 2));
-            }
-            else
-            {
-                summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.PowerComparison", "Power Comparison"), $"{currentRoundMeleeClashResult.CommonClashReport.PlayerClashValue:0.#} : {currentRoundMeleeClashResult.CommonClashReport.EnemyClashValue:0.#}", indent: indent + 2));
-
-                float playerSuccess = currentRoundMeleeClashResult.PlayerSuccessChance;
-                float enemySuccess = currentRoundMeleeClashResult.EnemySuccessChance;
-
-                summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.PlayerHitRate", "Player Hit Rate"), $"{playerSuccess * 100f:0.##}%", indent: indent + 2));
-                summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.EnemyHitRate", "Enemy Hit Rate"), $"{enemySuccess * 100f:0.##}%", indent: indent + 2));
-            }
-
-            Vector2 damage = action.InitialDamage;
-            Vector2 damageStatSum = action.DamageStatSum;
-            if (!action.DoesNotAttack)
-            {
-                summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.BasicDamagePower", "Basic Damage Power"), FormatMinMaxValue(damage), indent: indent + 2));
-                summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.StatusDamageBonus", "Status Damage Bonus"), FormatMinMaxValue(damageStatSum), indent: indent + 2));
-                if (action.AssociatedCard)
-                {
-                    foreach (PlayerEncounterVariable stat in action.AssociatedCard.CardModel.WeaponDamageStatInfluences)
-                    {
-                        summary.AppendLine(FormatBasicEntry(stat.Stat.GameName.ToString(), FormatMinMaxValue(stat.GenerateRandomRange()), indent: indent + 2));
-                    }
-                }
-                if (action.AmmoCard)
-                {
-                    foreach (PlayerEncounterVariable stat in action.AmmoCard.CardModel.WeaponDamageStatInfluences)
-                    {
-                        summary.AppendLine(FormatBasicEntry(stat.Stat.GameName.ToString(), FormatMinMaxValue(stat.GenerateRandomRange()), indent: indent + 2));
-                    }
-                }
-                summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.DamageTypes", "Damage Types"), action.DamageTypes.Select(t => t.Name.ToString()).Join(), indent: indent + 2));
-                summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.HitableParts", "Hitable Parts"), ""))
-                    .AppendLine($"{FormatPlayerHitResult(encounter, action, popup, damage + damageStatSum)}");
-            }
-
-            summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.DistanceChange", "Distance Change"), GetDistanceChangeText(action.PreClashDistanceChange), indent: indent + 2));
+            popup.CurrentRoundMeleeClashResult = savedMelee;
+            popup.CurrentRoundRangedClashResult = savedRanged;
+            UnityEngine.Random.state = random;
         }
-
-        summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.CurrentEnemyStatus", "Current Enemy Status"), ""))
-            .AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.Health", "Health"), encounter.CurrentEnemyBlood.ToString(), indent: indent + 2))
-            .AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.Courage", "Courage"), encounter.CurrentEnemyMorale.ToString(), indent: indent + 2))
-            .AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.Stamina", "Stamina"), encounter.CurrentEnemyStamina.ToString(), indent: indent + 2))
-            .AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.MeleeSkill", "Melee Skill"), encounter.CurrentEnemyMeleeSkill.ToString(), indent: indent + 2))
-            .AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.RangedSkill", "Ranged Skill"), encounter.CurrentEnemyRangedSkill.ToString(), indent: indent + 2))
-            .AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.Stealth", "Stealth"), encounter.CurrentEnemyStealth.ToString(), indent: indent + 2));
-
-        summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.PowerDetailedData", "Power Detailed Data"), ""))
-            .AppendLine($"{FormatPlayerClashValue(encounter, action, popup)}");
+        bool distant = encounter.Distant;
+        switch (popup.ChangeDistanceBeforeResolving(action))
+        {
+            case EncounterDistanceChange.AddDistance: distant = true; break;
+            case EncounterDistanceChange.CloseDistance: distant = false; break;
+        }
+        bool rangedClash = distant
+            ? !(action.ActionRange == ActionRange.Melee && encounter.CurrentEnemyAction.ActionRange == ActionRange.Melee)
+            : action.ActionRange == ActionRange.Ranged && encounter.CurrentEnemyAction.ActionRange == ActionRange.Ranged;
+        var common = rangedClash ? ranged.CommonClashReport : melee.CommonClashReport;
+        StringBuilder summary = new();
+        summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.PlayerAction", "Player Action"), action.GeneratedActionName, indent: indent));
+        summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.ActionSuccessChance", "Action Success Chance"), $"{chance:P2}", indent: indent));
+        summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.PowerComparison", "Power Comparison"),
+            $"{(rangedClash ? ranged.PlayerClashValue : common.PlayerClashValue):0.##} : {(rangedClash ? ranged.EnemyClashValue : common.EnemyClashValue):0.##}", indent: indent));
+        summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.EnemyHitRate", "Enemy Hit Rate"),
+            $"{(rangedClash ? ranged.EnemySuccessChance : melee.EnemySuccessChance):P2}", indent: indent));
+        summary.AppendLine(rangedClash ? ranged.PlayerSummary() : common.PlayerSummary(0, true));
+        if (!action.DoesNotAttack)
+        {
+            var rolls = EncounterPlayerDamageReportPreview.PlayerDamageRolls(action, popup);
+            Vector2 damage = rolls.Aggregate(Vector2.zero, (total, roll) => total + roll);
+            summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.DamagePower", "Damage Power"), FormatMinMaxValue(damage), indent: indent));
+            summary.AppendLine(FormatPlayerHitResult(encounter, action, popup, damage));
+        }
+        summary.AppendLine(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.Encounter.DistanceChange", "Distance Change"), GetDistanceChangeText(action.PreClashDistanceChange), indent: indent));
         return summary.ToString();
     }
-
 
     public static EnemyActionSelectionReport GenEnemyActionSelection(InGameEncounter _FromEncounter,
         List<EnemyAction> _ActionsList)
@@ -251,6 +170,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
 
         // 计算命中权重
         resultReport.Ranged = !flag;
+        resultReport.Filter = action.WoundLocationFilter;
         resultReport.BaseWeights.Head = flag
             ? encounterModel.EnemyBodyTemplate.Head.MeleeHitChanceWeight
             : encounterModel.EnemyBodyTemplate.Head.RangedHitChanceWeight;
@@ -314,115 +234,39 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         for (int i = 0; i < bodyParts.Length; i++)
             enemyDefenses[i] = sizeDefense + bodyPartArmors[i] + bodyPartArmorDefenses[i] + trackingDefenses[i];
 
-        List<List<(Vector2, WoundSeverity)>> woundMappings = new();
-        // 计算玩家伤害可造成的伤口
-        for (int i = 0; i < bodyParts.Length; i++)
-        {
-            List<WoundSeverityMappings> mappings = popup.WoundSeverityMappings.ToList();
-            mappings.Insert(0,
-                new WoundSeverityMappings
-                {
-                    AttackDefenseRatio = new Vector2(0f, mappings[0].AttackDefenseRatio.x),
-                    WoundSeverity = WoundSeverity.NoWound
-                });
-            mappings.Add(new WoundSeverityMappings
-            {
-                AttackDefenseRatio =
-                    new Vector2(mappings[mappings.Count - 1].AttackDefenseRatio.y, float.PositiveInfinity),
-                WoundSeverity = WoundSeverity.Serious
-            });
-            IOrderedEnumerable<(Vector2, WoundSeverity WoundSeverity)> attackRanges =
-                mappings.Select(m => (m.AttackDefenseRatio * enemyDefenses[i], m.WoundSeverity)).OrderBy(a =>
-                    a.WoundSeverity);
-            woundMappings.Add(attackRanges.ToList());
-        }
-
-
+        var rolls = EncounterPlayerDamageReportPreview.PlayerDamageRolls(action, popup);
+        double fatality = 0;
         string spaces = new(' ', indent);
-        float deadlyProb = 0f;
-        foreach (BodyLocations bodyPart in bodyParts)
-            if (resultReport.GetBodyLocationHitWeight(bodyPart) > 0)
+        foreach (BodyLocations part in bodyParts)
+        {
+            // GenerateEnemyWound falls back to torso when every weight is zero.
+            double hitChance = resultReport.TotalWeight > 0
+                ? resultReport.GetBodyLocationHitWeight(part) / resultReport.TotalWeight
+                : part == BodyLocations.Torso ? 1 : 0;
+            if (hitChance <= 0) continue;
+            var probabilities = EncounterPlayerDamageReportPreview.WoundProbabilities(rolls, enemyDefenses[(int)part], popup);
+            result.AppendLine($"{spaces}{BodyTemplate.LocationName(part)}: {hitChance:P1} ({LcStr("CSFFCardDetailTooltip.Encounter.TotalDefense", "Total Defense")}: {enemyDefenses[(int)part]:0.##})");
+            result.AppendLine(spaces + string.Join(" | ", probabilities.OrderBy(p => p.Key).Select(p => $"{p.Key}: {p.Value:P1}")));
+            foreach (var probability in probabilities)
             {
-                LocalizedString bodyPartName = new()
-                { LocalizationKey = $"CSFFCardDetailTooltip.BodyParts.{bodyPart}", DefaultText = bodyPart.ToString() };
-                List<(Vector2, WoundSeverity)> mapping = woundMappings[(int)bodyPart];
-                IEnumerable<(WoundSeverity, float)> woundsProbs = from m in mapping
-                                                                  where VectorMath.RangeIntersect(playerActionDamage, m.Item1).RangeLength() > 0
-                                                                  select (m.Item2,
-                                                                      VectorMath.RangeIntersect(playerActionDamage, m.Item1).RangeLength() /
-                                                                      playerActionDamage.RangeLength());
-                foreach ((WoundSeverity, float) woundProb in woundsProbs)
+                var wounds = body.GetBodyLocation(part).GetWoundsForSeverityDamageType(probability.Key, action.DamageTypes);
+                if (wounds == null || wounds.Length == 0) wounds = new[] { body.DefaultWound };
+                foreach (var wound in wounds)
                 {
-                    EnemyWound[] wounds = body.GetBodyLocation(bodyPart)
-                        .GetWoundsForSeverityDamageType(woundProb.Item1, action.DamageTypes);
-                    foreach (EnemyWound wound in wounds)
-                        // Debug.Log($"{wound.CombatLog}: {wound.EnemyValuesModifiers.BloodModifier.RangeMidValue()} / {encounter.CurrentEnemyBlood}");
-                        if (-wound.EnemyValuesModifiers.BloodModifier.RangeMidValue() >=
-                            encounter.CurrentEnemyBlood - 1e-5)
-                            // Debug.Log($"Added prob for {wound.CombatLog} (On {bodyPartName}) {resultReport.GetBodyLocationHitWeight(bodyPart) / resultReport.TotalWeight * 100f:0.##} * {woundProb.Item2:0.##} / {wounds.Length}");
-                            deadlyProb += resultReport.GetBodyLocationHitWeight(bodyPart) / resultReport.TotalWeight *
-                                woundProb.Item2 / wounds.Length;
+                    if (wound == null) continue;
+                    var hit = probability.Key == WoundSeverity.NoWound ? EnemyActionEffectCondition.OnlyOnHit : EnemyActionEffectCondition.OnlyOnHitAndWound;
+                    if (!wound.EnemyValuesModifiers.Applies(EnemyValueNames.Blood, hit)) continue;
+                    Vector2 loss = -wound.EnemyValuesModifiers.BloodModifier;
+                    float low = Mathf.Min(loss.x, loss.y), high = Mathf.Max(loss.x, loss.y);
+                    double lethal = low == high ? (low >= encounter.CurrentEnemyBlood ? 1 : 0)
+                        : Mathf.Clamp01((high - encounter.CurrentEnemyBlood) / (high - low));
+                    fatality += hitChance * probability.Value * lethal / wounds.Length;
                 }
-
-                result.AppendLine(
-                    $"{spaces}{bodyPartName.ToString()}: {resultReport.GetBodyLocationHitWeight(bodyPart) / resultReport.TotalWeight * 100f:0}% ({LcStr("CSFFCardDetailTooltip.Encounter.TotalDefense", "Total Defense")}: {enemyDefenses[(int)bodyPart]:0})");
-                result.AppendLine(
-                    $"{spaces}| {string.Join(" | ", mapping.Select(m => $"{VectorMath.RangeIntersect(playerActionDamage, m.Item1).RangeLength() / playerActionDamage.RangeLength() * 100f:0}%"))} |");
             }
-
-        result.AppendLine($" {LcStr("CSFFCardDetailTooltip.Encounter.LethalityProbabilityOfThisAttack", "Lethality Probability of This Attack")}:{deadlyProb * 100f:0.##}%");
-        // 输出结果
+        }
+        result.AppendLine($"{LcStr("CSFFCardDetailTooltip.DirectWoundFatality", "Direct wound fatality on hit")}: {fatality:P2}");
         return result.ToString();
     }
-
-    public static string FormatPlayerClashValue(InGameEncounter encounter, GenericEncounterPlayerAction action,
-        EncounterPopup popup, int indent = 1)
-    {
-        bool _WithRandomness = false;
-        StringBuilder result = new();
-        string spaces = new(' ', indent);
-        ClashResultsReport report = new()
-        {
-            PlayerCannotFail = action.CannotFailClash,
-            PlayerActionClashValue = action.GetClash(_WithRandomness),
-            PlayerSizeClashValue = popup.PlayerSize,
-            PlayerActionReachClashValue = action.Reach,
-            PlayerClashStatsAddedValues = action.GetClashStatsAddedValues(_WithRandomness)
-        };
-        bool ranged = encounter.Distant;
-        // Debug.Log(action.GetClash(true));
-        result.AppendLine($"{spaces}{LcStr("CSFFCardDetailTooltip.Encounter.BaseValue", "Base Value")}: {report.PlayerActionClashValue:0}")
-    .AppendLine(
-        $"{spaces}{LcStr("CSFFCardDetailTooltip.Encounter.SizeBonus", "Size Bonus")}: {(action.ActionRange == ActionRange.Ranged ? 0.0f : report.PlayerSizeClashValue):0}")
-    .AppendLine($"{spaces}{LcStr("CSFFCardDetailTooltip.Encounter.WeaponLengthBonus", "Weapon Length Bonus")}: {report.PlayerActionReachClashValue}");
-        if (report.PlayerClashStatsAddedValues != null && report.PlayerClashStatsAddedValues.Count > 0)
-            result.AppendLine(
-                $"{spaces}{LcStr("CSFFCardDetailTooltip.Encounter.StatusBonus", "Status Bonus")}:\n{string.Join("\n", report.PlayerClashStatsAddedValues.ToArray().Select(v => $"{spaces} {v.Stat.GameName.ToString()}: {ColorFloat(v.Value)}"))}");
-        if (encounter.PlayerHidden)
-        {
-            report.PlayerClashStealthBonus = action.GetClashStealthBonus(_WithRandomness);
-            // Debug.Log(action.GetClashStealthBonus(true));
-            result.AppendLine($"{spaces}{LcStr("CSFFCardDetailTooltip.Encounter.StealthBonus", "Stealth Bonus")}: <color=green>{report.PlayerClashStealthBonus:0}</color>");
-        }
-
-        if ((!ranged && action.ActionRange == ActionRange.Ranged) ||
-            (ranged && action.ActionRange == ActionRange.Melee))
-        {
-            report.PlayerClashIneffectiveRangeMalus = action.GetClashIneffectiveRangeMalus(_WithRandomness);
-            // Debug.Log(action.GetClashIneffectiveRangeMalus(true));
-            result.AppendLine($"{spaces}{LcStr("CSFFCardDetailTooltip.Encounter.IneffectiveRangeMalus", "Ineffective Range Malus")}: <color=red>{report.PlayerClashIneffectiveRangeMalus:0}</color>");
-        }
-
-        if (action.ActionRange == ActionRange.Ranged)
-        {
-            result.AppendLine($"{spaces}{LcStr("CSFFCardDetailTooltip.Encounter.EnemySizeMalus", "Enemy Size Malus")}: {ColorFloat(-encounter.CurrentEnemySize)}");
-            result.AppendLine($"{spaces}{LcStr("CSFFCardDetailTooltip.Encounter.InaccuracyMalus", "Inaccuracy Malus")}: {ColorFloat(-action.ClashRangedInaccuracy.y)}");
-            result.AppendLine($"{spaces}{LcStr("CSFFCardDetailTooltip.Encounter.EnemyCoverMalus", "Enemy Cover Malus")}: {ColorFloat(-encounter.CurrentEnemyCover)}");
-        }
-
-        return result.ToString();
-    }
-
     public static string FormatEnemyHitResult(InGameEncounter encounter, EnemyAction action, EncounterPopup popup,
         int indent = 2)
     {
@@ -478,26 +322,25 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         }
 
         if (gm && gm.ArmorCards != null)
-            for (int j = 0; j < gm.ArmorCards.Count; j++)
-                if (GraphicsManager.Instance.CharacterWindow.HasCardEquipped(gm.ArmorCards.get_Item(j)))
+            foreach (var armorCard in gm.ArmorCards)
+                if (GraphicsManager.Instance.CharacterWindow.HasCardEquipped(armorCard))
                 {
-                    playerBodyLocationHit.ArmorWeights.Head +=
-                        gm.ArmorCards.get_Item(j).CardModel.ArmorValues.HeadHitProbabilityModifier;
-                    playerBodyLocationHit.ArmorWeights.Torso +=
-                        gm.ArmorCards.get_Item(j).CardModel.ArmorValues.TorsoHitProbabilityModifier;
-                    playerBodyLocationHit.ArmorWeights.LArm +=
-                        gm.ArmorCards.get_Item(j).CardModel.ArmorValues.LArmHitProbabilityModifier;
-                    playerBodyLocationHit.ArmorWeights.RArm +=
-                        gm.ArmorCards.get_Item(j).CardModel.ArmorValues.RArmHitProbabilityModifier;
-                    playerBodyLocationHit.ArmorWeights.LLeg +=
-                        gm.ArmorCards.get_Item(j).CardModel.ArmorValues.LLegHitProbabilityModifier;
-                    playerBodyLocationHit.ArmorWeights.RLeg +=
-                        gm.ArmorCards.get_Item(j).CardModel.ArmorValues.RLegHitProbabilityModifier;
-                    for (int k = 0; k < bodyParts.Length; k++)
-                        armors[k] += gm.ArmorCards.get_Item(j).CardModel.ArmorValues
-                            .CalculateArmorForLocation(action.DamageTypes, bodyParts[k]);
+                    AddArmor(armorCard);
+                    if (armorCard.ContainedLiquid) AddArmor(armorCard.ContainedLiquid);
                 }
 
+        void AddArmor(InGameCardBase card)
+        {
+            var weights = ArmorValuesPreview.ArmorHitWeights(card);
+            playerBodyLocationHit.ArmorWeights.Head += weights.Head;
+            playerBodyLocationHit.ArmorWeights.Torso += weights.Torso;
+            playerBodyLocationHit.ArmorWeights.LArm += weights.LArm;
+            playerBodyLocationHit.ArmorWeights.RArm += weights.RArm;
+            playerBodyLocationHit.ArmorWeights.LLeg += weights.LLeg;
+            playerBodyLocationHit.ArmorWeights.RLeg += weights.RLeg;
+            for (int k = 0; k < bodyParts.Length; k++)
+                armors[k] += ArmorValuesPreview.ArmorDefense(card, action.DamageTypes, bodyParts[k]);
+        }
         playerBodyLocationHit.EnemyActionWeights.Head +=
             action.AddedPlayerLocationHitProbabilities.HeadHitProbabilityModifier;
         playerBodyLocationHit.EnemyActionWeights.Torso +=
@@ -531,36 +374,16 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         currentRoundEnemyDamageReport.ValuesDamage = action.AddedDamageFromEnemyValues(encounter, false);
         currentRoundEnemyDamageReport.WoundsDamage = action.AddedDamageValueFromWounds(encounter, false);
         currentRoundEnemyDamageReport.StatsAddedDamage = action.AddedDamageFromStats(false);
-
-        // 计算敌人可造成的伤口
-        List<List<Tuple<Vector2, WoundSeverity>>> woundMappings = new();
-        for (int i = 0; i < bodyParts.Length; i++)
-        {
-            List<WoundSeverityMappings> mappings = popup.WoundSeverityMappings.ToList();
-            mappings.Insert(0,
-                new WoundSeverityMappings
-                {
-                    AttackDefenseRatio = new Vector2(0f, mappings[0].AttackDefenseRatio.x),
-                    WoundSeverity = WoundSeverity.NoWound
-                });
-            mappings.Add(new WoundSeverityMappings
-            {
-                AttackDefenseRatio =
-                    new Vector2(mappings[mappings.Count - 1].AttackDefenseRatio.y, float.PositiveInfinity),
-                WoundSeverity = WoundSeverity.Serious
-            });
-            // Debug.Log(string.Join("\n", mappings.Select(m => $"{m.WoundSeverity}: {m.AttackDefenseRatio}")));
-            IOrderedEnumerable<Tuple<Vector2, WoundSeverity>> attackRanges =
-                (from m in mappings
-                 select new Tuple<Vector2, WoundSeverity>(m.AttackDefenseRatio * armors[i], m.WoundSeverity))
-                .OrderBy(a => a.Item2);
-            woundMappings.Add(attackRanges.ToList());
-        }
+        currentRoundEnemyDamageReport.WrestlingDamage = encounter.Wrestling ? action.WrestlingDamageModifier.RangeMidValue() : 0;
+        currentRoundEnemyDamageReport.VsVulnerableDamage = encounter.PlayerVulnerable ? action.DmgVsVulnerableModifier.RangeMidValue() : 0;
+        currentRoundEnemyDamageReport.VsEscapeDamage = encounter.CurrentPlayerAction != null && encounter.CurrentPlayerAction.IsEscapeAction
+            ? action.AddedDamageVsEscape(false) : 0;
 
         foreach (BodyLocations bodyPart in bodyParts)
         {
             // Debug.Log(string.Join(",", armors));
             currentRoundEnemyDamageReport.ArmorDefense = armors[(int)bodyPart];
+            currentRoundEnemyDamageReport.BodyPartArmor = bodyPartArmors[(int)bodyPart];
             WoundSeverity woundSeverity = popup.GenerateWoundSeverity(currentRoundEnemyDamageReport.EnemyDamage,
                 currentRoundEnemyDamageReport.PlayerDefense);
             currentRoundEnemyDamageReport.AttackSeverity = woundSeverity;
@@ -574,10 +397,11 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
             if (wounds.Count == 0)
                 encounter.EncounterModel.DefaultPlayerWounds.GetWoundsForSeverity(woundSeverity, ref wounds);
 #endif
-            if (wounds[0].DroppedCards.Length == 0) return "";
+            var dropped = wounds.Where(w => w != null && w.DroppedCards != null).SelectMany(w => w.DroppedCards).Where(c => c).Distinct().ToArray();
+            if (dropped.Length == 0) continue;
             if (playerBodyLocationHit.GetBodyLocationHitWeight(bodyPart) > 0)
                 result.AppendLine(
-                    $"{new string(' ', indent)}{new LocalizedString { LocalizationKey = $"CSFFCardDetailTooltip.BodyParts.{bodyPart}", DefaultText = bodyPart.ToString()}.ToString()}({playerBodyLocationHit.GetBodyLocationHitWeight(bodyPart) / playerBodyLocationHit.TotalWeight * 100f:0.#}%): {wounds.Select(w => w.DroppedCards[0].CardName.ToString()).Join()} ({LcStr("CSFFCardDetailTooltip.Encounter.AttackDefenseRatio", "Attack-Defense Ratio")}: {currentRoundEnemyDamageReport.EnemyDamage}:{currentRoundEnemyDamageReport.PlayerDefense})");
+                    $"{new string(' ', indent)}{new LocalizedString { LocalizationKey = $"CSFFCardDetailTooltip.BodyParts.{bodyPart}", DefaultText = bodyPart.ToString()}.ToString()}({playerBodyLocationHit.GetBodyLocationHitWeight(bodyPart) / playerBodyLocationHit.TotalWeight * 100f:0.#}%): {dropped.Select(c => c.CardName.ToString()).Join()} ({LcStr("CSFFCardDetailTooltip.Encounter.AttackDefenseRatio", "Attack-Defense Ratio")}: {currentRoundEnemyDamageReport.EnemyDamage}:{currentRoundEnemyDamageReport.PlayerDefense})");
         }
 
         return result.ToString();
@@ -631,10 +455,13 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         InGameCardBase givenCard, int indent = 0)
     {
         List<string> texts = new();
-        string cardActionText = FormatCardAction(action, recivingCard, indent);
+        action = (CardOnCardAction)CardActionPreview.PreviewAction(action, recivingCard, givenCard);
+        string cardActionText = FormatResolvedCardAction(action, recivingCard, indent, givenCard);
         if (!string.IsNullOrWhiteSpace(cardActionText)) texts.Add(cardActionText);
-        CardStateChange stateChange = action.GivenCardChanges;
+        CardStateChange stateChange = CardStateChangePreview.PreviewStateChange(action.GivenCardChanges, givenCard,
+            recivingCard, action.DurabilitiesLiquidScale, false);
         string cardModText = FormatStateChange(stateChange, givenCard, indent);
+        cardModText += FormatAddedDurabilities(action.GivenDurabilityChanges, givenCard, indent);
         if (!string.IsNullOrWhiteSpace(cardModText))
         {
             texts.Add(FormatBasicEntry(
@@ -659,12 +486,19 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         return texts.Join(delimiter: "\n");
     }
 
-    public static string FormatCardAction(CardAction action, InGameCardBase fromCard, int indent = 0)
+    public static string FormatCardAction(CardAction action, InGameCardBase fromCard, int indent = 0,
+        InGameCardBase givenCard = null)
+    {
+        return FormatResolvedCardAction(CardActionPreview.PreviewAction(action, fromCard, givenCard), fromCard, indent, givenCard);
+    }
+
+    private static string FormatResolvedCardAction(CardAction action, InGameCardBase fromCard, int indent,
+        InGameCardBase givenCard)
     {
         List<string> texts = new();
         List<string> stateModTexts = new();
 
-        string timeModText = FormatTimeCostModifiers(action, fromCard, indent);
+        string timeModText = FormatTimeCostModifiers(action, fromCard, givenCard, indent);
         if (!timeModText.IsNullOrWhiteSpace())
         {
             texts.Add(FormatBasicEntry(new LocalizedString()
@@ -675,7 +509,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
             texts.Add(timeModText);
         }
 
-        if (action.StatModifications != null)
+        if (action.AllStatModifiers != null)
         {
             foreach (StatModifier statModifier in action.AllStatModifiers)
                 stateModTexts.Add(FormatStatModifier(statModifier, indent + 2));
@@ -690,8 +524,23 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
             }
         }
 
-        CardStateChange stateChange = action.ReceivingCardChanges;
+        if (action.AllTemporaryStatModifiers != null && action.AllTemporaryStatModifiers.Count > 0)
+        {
+            texts.Add(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.DuringAction", "During this action only"), "", indent: indent));
+            texts.Add(string.Join("\n", action.AllTemporaryStatModifiers.Select(m => FormatStatModifier(m, indent + 2))));
+        }
+
+        if (action.AllNPCStatModifiers != null)
+            foreach (var modifier in action.AllNPCStatModifiers)
+                if (modifier.TargetStat)
+                    texts.Add(FormatBasicEntry(FormatMinMaxValue(modifier.ValueChange),
+                        $"{(modifier.UseAssociatedAgent ? LcStr("CSFFCardDetailTooltip.AssociatedNPC", "Associated NPC") : modifier.TargetAgent ? modifier.TargetAgent.AgentName.ToString() : "NPC")}: {modifier.TargetStat.GameName}", indent: indent + 2));
+
+        CardStateChange stateChange = CardStateChangePreview.PreviewStateChange(action.ReceivingCardChanges, fromCard,
+            givenCard, action.DurabilitiesLiquidScale, !action.InstantDurabilityModifications);
         string cardModText = FormatStateChange(stateChange, fromCard, indent);
+        if (!action.InstantDurabilityModifications || stateChange.ModType != CardModifications.Destroy)
+            cardModText += FormatAddedDurabilities(action.ReceivingDurabilityChanges, fromCard, indent);
         if (!string.IsNullOrWhiteSpace(cardModText))
         {
             texts.Add(FormatBasicEntry(
@@ -708,7 +557,17 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         return texts.Join(delimiter: "\n");
     }
 
-    private static string FormatTimeCostModifiers(CardAction action, InGameCardBase _ReceivingCard, int indent)
+    private static string FormatAddedDurabilities(TransferedDurabilities added, InGameCardBase card, int indent)
+    {
+        if (!card || added == null || added.IsEmpty) return string.Empty;
+        CardStateChange change = new() { ModType = CardModifications.DurabilityChanges };
+        change.ApplyDurabilityChanges(added);
+        return "\n" + FormatBasicEntry(LcStr("CSFFCardDetailTooltip.AdditionalDurabilityChanges", "Additional durability changes"), "", indent: indent)
+               + "\n" + FormatStateChange(change, card, indent);
+    }
+
+    private static string FormatTimeCostModifiers(CardAction action, InGameCardBase _ReceivingCard,
+        InGameCardBase givenCard, int indent)
     {
         if (action == null) return string.Empty;
 
@@ -716,22 +575,23 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         List<ActionModifier> modifiers = new();
         bool notInBase = gm.NotInBase;
 
-        void AddApplicable(IEnumerable<ActionModifier> source)
+        void AddApplicable(IEnumerable<ActionModifier> source, InGameCardBase sourceCard)
         {
             if (source == null) return;
             foreach (ActionModifier mod in source)
             {
-                if (mod.DurationModifier != 0 && mod.AppliesToAction(action, notInBase, _ReceivingCard, null))
+                if (mod != null && mod.DurationModifier != 0 &&
+                    mod.AppliesToAction(action, notInBase, sourceCard, givenCard, _DoneByNPC: null))
                     modifiers.Add(mod);
             }
         }
 
-        AddApplicable(gm.CurrentActionModifiers);
-        AddApplicable(action.BpActionModifiers);
+        AddApplicable(gm.CurrentActionModifiers, _ReceivingCard);
+        AddApplicable(action.BpActionModifiers, _ReceivingCard);
 
         if ((bool)_ReceivingCard && (bool)_ReceivingCard.CardModel)
         {
-            AddApplicable(_ReceivingCard.CardModel.ActionModifiers);
+            AddApplicable(_ReceivingCard.CardModel.ActionModifiers, _ReceivingCard);
 
             CardTag[] cardTags = _ReceivingCard.CardModel.CardTags;
             if (cardTags != null && cardTags.Length != 0)
@@ -739,9 +599,19 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
                 foreach (CardTag tags in cardTags)
                 {
                     if (!tags || tags.ActionModifiers == null || tags.ActionModifiers.Length == 0) continue;
-                    AddApplicable(tags.ActionModifiers);
+                    AddApplicable(tags.ActionModifiers, _ReceivingCard);
                 }
             }
+        }
+
+        if (givenCard && givenCard.CardModel)
+        {
+            // Match CardAction.CollectActionModifiers: direct given-card modifiers use
+            // that card as the source; its tag modifiers use the receiving card.
+            AddApplicable(givenCard.CardModel.ActionModifiers, givenCard);
+            if (givenCard.CardModel.CardTags != null)
+                foreach (CardTag tag in givenCard.CardModel.CardTags)
+                    if (tag) AddApplicable(tag.ActionModifiers, _ReceivingCard);
         }
 
         if (modifiers.Count == 0) return string.Empty;
@@ -754,11 +624,15 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
             texts.Add(FormatBasicEntry($"{ColorFloat(mod.DurationModifier)}", label, indent: indent + 2));
         }
 
+        texts.Add(FormatBasicEntry(LcStr("CSFFCardDetailTooltip.FinalDuration", "Final duration"),
+            HoursDisplay.HoursToCompleteString(GameManager.TickToHours(action.TotalDaytimeCost, action.MiniTicksCost)), indent: indent + 2));
+
         return texts.Join(delimiter: "\n");
     }
 
     private static string FormatStateChange(CardStateChange stateChange, InGameCardBase fromCard, int indent = 0)
     {
+        if (!fromCard || !fromCard.CardModel) return string.Empty;
         List<string> cardModTexts = new();
         if (stateChange.ModType == CardModifications.DurabilityChanges)
         {
@@ -788,7 +662,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
                         { LocalizationKey = "CSFFCardDetailTooltip.Progress", DefaultText = "Progress" }
                             .ToString()
                         : fromCard.CardModel.Progress.CardStatName, indent: indent + 2));
-            if (stateChange.LiquidQuantityChange.magnitude != 0)
+            if (stateChange.LiquidQuantityChange.magnitude != 0 && (stateChange.ModifyLiquid || fromCard.IsLiquid))
                 cardModTexts.Add(FormatBasicEntry(FormatMinMaxValue(stateChange.LiquidQuantityChange),
                     new LocalizedString
                     {
@@ -866,6 +740,14 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
                 texts.Add(FormatBasicEntry($"{FormatMinMaxValue(statModifier.RateModifier)}",
                     $"{statModifier.Stat.GameName.ToString()} {new LocalizedString { LocalizationKey = "CSFFCardDetailTooltip.Rate", DefaultText = "Rate" }.ToString()}",
                     indent: indent));
+            if (statModifier.MinValueModifier != Vector2.zero)
+                texts.Add(FormatBasicEntry(FormatMinMaxValue(statModifier.MinValueModifier),
+                    $"{statModifier.Stat.GameName} ({LcStr("CSFFCardDetailTooltip.Minimum", "Minimum")})", indent: indent));
+            if (statModifier.MaxValueModifier != Vector2.zero)
+                texts.Add(FormatBasicEntry(FormatMinMaxValue(statModifier.MaxValueModifier),
+                    $"{statModifier.Stat.GameName} ({LcStr("CSFFCardDetailTooltip.Maximum", "Maximum")})", indent: indent));
+            if (statModifier.ApplyEachTick && texts.Count > 0)
+                texts.Add(LcStr("CSFFCardDetailTooltip.PerTick", "Per action tick"));
         }
 
         return texts.Join(delimiter: "\n");
@@ -913,7 +795,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
         return $"{new string(' ', indent)}<color=\"yellow\">{current:0.##}/{max:0.##}</color> {name}";
     }
 
-    public static string FormatWeaponStats(Vector2 clash, Vector2 damage, float reach, int indent = 0)
+    public static string FormatWeaponStats(Vector2 clash, Vector2 damage, float reach, int indent = 0, bool attacks = true)
     {
         LocalizedString title = new()
         { LocalizationKey = "CSFFCardDetailTooltip.WeaponStats", DefaultText = "Weapon Stats" };
@@ -926,9 +808,37 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
 
         return $"{FormatBasicEntry(title, "", indent: indent)}\n" +
                $"<size=75%>{FormatBasicEntry(FormatMinMaxValue(clash), clashTitle, indent: indent + 2)}\n" +
-               $"{FormatBasicEntry(FormatMinMaxValue(damage), damageTitle, indent: indent + 2)}\n" +
+               (attacks ? $"{FormatBasicEntry(FormatMinMaxValue(damage), damageTitle, indent: indent + 2)}\n"
+                   : $"{FormatBasicEntry(LcStr("CSFFCardDetailTooltip.NoAttack", "Does not deal attack damage"), "", indent: indent + 2)}\n") +
                $"{FormatBasicEntry(ColorFloat(reach), reachTitle, indent: indent + 2)}" +
                $"</size>";
+    }
+
+    public static string FormatWeaponStats(InGameCardBase card)
+    {
+        if (!EncounterPopup.Instance)
+            return FormatWeaponStats(card.CardModel.BaseClashValue, card.CardModel.WeaponDamage, card.CardModel.WeaponReach);
+        List<string> texts = new();
+        var moves = card.CardModel.WeaponMoves;
+        var random = UnityEngine.Random.state;
+        try
+        {
+            foreach (var move in moves != null && moves.Length > 0 ? moves : new WeaponMove[] { null })
+            {
+                GenericEncounterPlayerAction preview = new();
+                preview.InitializeWithCardAndAction(card, move, "", new List<PlayerValuesModifier>());
+                Vector2 clash = preview.InitialClashValue;
+                if (preview.ClashStatsAddedValues != null)
+                    foreach (var modifier in preview.ClashStatsAddedValues) clash += modifier.Value;
+                texts.Add(FormatBasicEntry(move ? move.ActionName.ToString() : card.CardModel.CardName.ToString(), ""));
+                texts.Add(FormatWeaponStats(clash, preview.InitialDamage + preview.DamageStatSum, preview.Reach, 2, !preview.DoesNotAttack));
+                if (preview.NeedsAmmo)
+                    texts.Add(LcStr("CSFFCardDetailTooltip.WithoutAmmo", "Before ammunition bonuses"));
+            }
+        }
+        finally { UnityEngine.Random.state = random; }
+        texts.Add(LcStr("CSFFCardDetailTooltip.BeforeTargetBonuses", "Current condition and skills; before target and encounter bonuses"));
+        return string.Join("\n", texts);
     }
     public static string FormatWeaponStats(CardData card, int indent = 2)
     {
@@ -1005,7 +915,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
                 { LocalizationKey = "CSFFCardDetailTooltip.statOnFullTitle", DefaultText = "On Full" }
                     .ToString(), "", indent: 4);
                 CollectionDropReport collectionDropsReport =
-                    GameManager.Instance.GetCollectionDropsReport(stat.OnFull, currentCard, null, InGameNPCOrPlayer.PlayerAgent, false);
+                    CollectionDropReportPreview.Create(stat.OnFull, currentCard, null, InGameNPCOrPlayer.PlayerAgent, false);
                 dropList = Action.FormatCardDropList(
                     collectionDropsReport, currentCard,
                     action: stat.OnFull, indent: 6);
@@ -1026,7 +936,7 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
                 bool uniqueOnBoard = currentCard.CardModel.UniqueOnBoard;
                 if (currentCard.CardModel.CardType == CardTypes.Weather) currentCard.CardModel.UniqueOnBoard = false;
                 CollectionDropReport collectionDropsReport =
-                    GameManager.Instance.GetCollectionDropsReport(stat.OnZero, currentCard, null, InGameNPCOrPlayer.PlayerAgent, false);
+                    CollectionDropReportPreview.Create(stat.OnZero, currentCard, null, InGameNPCOrPlayer.PlayerAgent, false);
                 currentCard.CardModel.UniqueOnBoard = uniqueOnBoard;
                 dropList = Action.FormatCardDropList(
                     collectionDropsReport, currentCard,
