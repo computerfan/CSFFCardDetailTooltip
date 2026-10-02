@@ -17,8 +17,9 @@ catch { $rejected = $true }
 if (!$rejected) { throw 'Mismatched release tag was accepted.' }
 Write-Host 'PASS: PowerShell syntax, branch/release versions and mismatched tag rejection.'
 & "$PSScriptRoot/Test-SteamDownload.ps1"
-dotnet build "$PSScriptRoot/SteamSession/SteamSession.csproj" -c Release --nologo
+$dotnet = & "$PSScriptRoot/Get-DotNetSdk.ps1"
+& $dotnet build "$PSScriptRoot/SteamSession/SteamSession.csproj" -c Release --nologo
 if ($LASTEXITCODE -ne 0) { throw 'Steam session helper build failed.' }
 $downloader = & "$PSScriptRoot/Get-DepotDownloader.ps1"
-dotnet "$PSScriptRoot/SteamSession/bin/Release/net10.0/SteamSession.dll" self-test $downloader
+& $dotnet "$PSScriptRoot/SteamSession/bin/Release/net10.0/SteamSession.dll" self-test $downloader
 if ($LASTEXITCODE -ne 0) { throw 'Steam session serialization test failed.' }

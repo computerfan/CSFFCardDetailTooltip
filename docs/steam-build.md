@@ -10,6 +10,12 @@ Install the **.NET 10 SDK** and use **PowerShell 7**. From this repository, run:
 ./tools/Initialize-SteamSession.ps1 -Username 'your-steam-login-name'
 ```
 
+The script checks the SDK before downloading or logging in. It uses .NET 10 from your `PATH`, or a portable SDK at `obj/steam-tools/dotnet/dotnet.exe`. If `dotnet --version` reports 9.x, install the .NET 10 **SDK** (the runtime alone cannot build the helper), then reopen PowerShell. You can also select an existing portable SDK explicitly:
+
+```powershell
+./tools/Initialize-SteamSession.ps1 -Username 'your-steam-login-name' -DotNetPath 'D:/tools/dotnet10/dotnet.exe'
+```
+
 The script downloads checksum-pinned DepotDownloader 3.4.0 and starts its interactive login. Enter your Steam password in your local terminal and complete Steam Guard when prompted. It requests the open-beta manifest to check access, without downloading the whole game. A dedicated Steam account with its own game license limits the scope of the CI credential.
 
 After a successful login, the script writes **obj/steam-auth/session.b64**. This ignored file contains the remembered login token and any Steam Guard data, not your password. Base64 is encoding, not encryption: treat the file as an account credential. Do not commit, cache, upload as an artifact, or paste it into chat. The helper restores any pre-existing DepotDownloader isolated-storage file on normal exit.
