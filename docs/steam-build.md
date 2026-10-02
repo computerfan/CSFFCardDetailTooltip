@@ -58,6 +58,12 @@ The `public` branch option is available for compatibility checks, but this mod t
 
 Pull requests run only secret-free script, version and session-serialization checks. They do **not** compile the mod or download licensed game data. Authenticated builds run on trusted pushes, release tags or maintainer dispatches, never through `pull_request_target`.
 
+## Publishing a release
+
+Push an annotated version tag matching the project, such as `v1.0.11`. After its **Build Windows mod** run succeeds, **Publish release** verifies the tag commit and artifact provenance, then publishes `CSFFCardDetailTooltip-1.0.11.zip` on GitHub Releases. The release description contains only commit subjects and hashes since the preceding reachable `v*` tag. It does not use GitHub's generated summaries or contributor sections.
+
+To publish a tag whose build completed before the publishing workflow was installed, manually run **Publish release** with that successful tag build's run ID. This reuses the existing artifact without moving the tag or rebuilding. Expired artifacts require a new successful run of the original tag build. Existing published releases are left intact on retries. No additional secret is required; publishing uses the workflow's `GITHUB_TOKEN`.
+
 ## Renewing authentication and troubleshooting
 
 - **Missing secrets:** check the exact environment name and both secret names above. Forks need their own environment and owning account.
