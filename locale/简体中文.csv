@@ -158,3 +158,23 @@ CSFFCardDetailTooltip.Encounter.InitialDamageModifier,Damage,伤害
 CSFFCardDetailTooltip.Encounter.WrestlingDamageBonusModifier,Wrestling damage,缠斗伤害
 CSFFCardDetailTooltip.Encounter.DamageVsEscapeModifier,Damage versus escape,对逃跑目标的伤害修正
 CSFFCardDetailTooltip.Encounter.CannotFail,Action clash cannot fail,本次行动对抗必定成功
+CSFFCardDetailTooltip.NPC.BeforeNovelty,before repetition and stat limits,未计入重复行动衰减与属性上下限
+CSFFCardDetailTooltip.NPC.BeforeLimits,before stat limits,未计入属性上下限
+CSFFCardDetailTooltip.NPC.EnableDuty,Enable duty,启用职责
+CSFFCardDetailTooltip.NPC.DisableDuty,Disable duty,停用职责
+CSFFCardDetailTooltip.NPC.Worker,Worker,执行者
+CSFFCardDetailTooltip.NPC.CurrentDuty,Current duty,当前职责
+CSFFCardDetailTooltip.NPC.DutyStep,Duty step,职责步骤
+CSFFCardDetailTooltip.NPC.StepTicks,Current step: remaining ticks,当前步骤剩余时间单位
+CSFFCardDetailTooltip.NPC.Destination,Destination,目的地
+CSFFCardDetailTooltip.NPC.LastDutyCheck,Last duty check,上次职责检查
+CSFFCardDetailTooltip.NPC.SelectedWork,Selected work,已选定的工作
+CSFFCardDetailTooltip.NPC.WorkDrops,Selected work outcomes (quantities are samples),已选定工作的可能产出（数量为抽样值）
+CSFFCardDetailTooltip.NPC.WrongTime,outside allowed time,不在允许时段
+CSFFCardDetailTooltip.NPC.NeedsHome,must be at home,需要在家中
+CSFFCardDetailTooltip.NPC.Hidden,cannot work while hidden,藏匿时无法执行
+CSFFCardDetailTooltip.NPC.DailyLimit,daily limit reached,已达每日次数上限
+CSFFCardDetailTooltip.NPC.DutyConditions,duty requirements unmet,职责条件未满足
+CSFFCardDetailTooltip.NPC.ActionRequirements,required action or material conditions unmet,所需行动或材料条件未满足
+CSFFCardDetailTooltip.NPC.SelectionCancelled,selection excluded,已被职责选择规则排除
+CSFFCardDetailTooltip.NPC.InDialog,busy in dialogue,正在对话

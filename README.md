@@ -31,7 +31,11 @@ Compatibility with older stable versions and Android has not been verified.
   examples, and trap timers do not predict when an animal will arrive.
 - Wound-fatality estimates cover immediate wound blood loss after a hit, excluding
   later poison and other secondary effects.
-- Player-action tooltips do not predict an NPC's autonomous work schedule.
+- NPC work tooltips show the selected work step and its remaining ticks, not a
+  whole expedition's completion time. Blocked-duty reasons reflect the game's
+  last duty check. Outcome quantities are samples and may change before completion.
+- NPC stat changes include the target's scaling, before repetition penalties and
+  stat limits. Ordinary player-action buttons continue to use player calculations.
 
 ## Credits
 
@@ -59,6 +63,11 @@ __Toggle Note__: When using the hotkey to enable/disable the detailed tooltips, 
 # Change Log
 
 ## Unreleased
+
+- Show NPC workers, selected duties, step countdowns, destinations and recorded
+  duty blockers on NPC and working-card tooltips.
+- Preview selected NPC work using the worker's action modifiers and drop weights.
+- Show duty activation changes and target-scaled NPC relationship/stat changes.
 
 - Expand encounter previews with conditional stat changes, vulnerability,
   wrestling and temporary effects, including duration refreshes.

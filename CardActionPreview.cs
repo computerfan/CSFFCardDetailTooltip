@@ -9,7 +9,7 @@ namespace CSFFCardDetailTooltip;
 // Preview adapter for the original CardAction game type.
 public static class CardActionPreview
 {
-    public static CardAction PreviewAction(CardAction source, InGameCardBase receiving, InGameCardBase given)
+    public static CardAction PreviewAction(CardAction source, InGameCardBase receiving, InGameCardBase given, InGameNPC worker = null)
     {
         var preview = (CardAction)AccessTools.Method(typeof(object), "MemberwiseClone").Invoke(source, null);
         // CollectActionModifiers clears these caches. A shallow copy alone would clear the live action.
@@ -22,7 +22,7 @@ public static class CardActionPreview
         preview.FlavoursConsumed = null;
         preview.SpicesConsumed = null;
         var random = UnityEngine.Random.state;
-        try { preview.CollectActionModifiers(receiving, given, null); }
+        try { preview.CollectActionModifiers(receiving, given, worker); }
         finally { UnityEngine.Random.state = random; }
         return preview;
     }

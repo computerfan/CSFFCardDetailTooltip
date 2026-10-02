@@ -697,6 +697,7 @@ namespace CSFFCardDetailTooltip
                 texts.Add(FormatWeaponStats(__instance));
             }
 
+            texts.Add(SelectedNPCDutyPreview.FormatCard(__instance));
             string tooltipContent = JoinTooltipLines(texts);
             if (!string.IsNullOrWhiteSpace(tooltipContent))
             {

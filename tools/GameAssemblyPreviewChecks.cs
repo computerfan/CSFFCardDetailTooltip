@@ -267,6 +267,7 @@ public static class Commands
 
         var assets = Resources.FindObjectsOfTypeAll<CardData>();
         CheckCookingAndDrops(knife, assets);
+        CheckNPCPreviews(knife);
         var fixtureObject = new GameObject("Tooltip CardStateChange fixture");
         fixtureObject.SetActive(false);
         var fixture = fixtureObject.AddComponent<InGameCardBase>();
@@ -423,5 +424,91 @@ public static class Commands
             }
         }
         finally { UnityEngine.Object.Destroy(fixtureObject); }
+    }
+    static void CheckNPCPreviews(InGameCardBase workCard)
+    {
+        var root = new GameObject("NPC preview fixture");
+        root.SetActive(false);
+        var npc = root.AddComponent<InGameNPC>();
+        var otherObject = new GameObject("Second NPC preview fixture");
+        otherObject.SetActive(false);
+        var other = otherObject.AddComponent<InGameNPC>();
+        var duty = ScriptableObject.CreateInstance<NPCDuty>();
+        var step = ScriptableObject.CreateInstance<AffectItemsDutyAction>();
+        var model = Resources.FindObjectsOfTypeAll<NPCAgent>().First(m => m.AlliedWithPlayer);
+        var statModel = Resources.FindObjectsOfTypeAll<NPCStat>().First();
+        var gm = GameManager.Instance;
+        try
+        {
+            foreach (var worker in new[] { npc, other })
+            {
+                AccessTools.Property(typeof(InGameNPC), "NPCModel").SetValue(worker, model, null);
+                AccessTools.Property(typeof(InGameNPC), "Initialized").SetValue(worker, true, null);
+                AccessTools.Property(typeof(InGameNPC), "AssociatedCard").SetValue(worker, workCard, null);
+                var stat = worker.gameObject.AddComponent<InGameNPCStat>();
+                stat.Model = new NPCStatInstance { ModelStat = statModel };
+                stat.ParentNPC = worker;
+                var dict = (Dictionary<NPCStat, InGameNPCStat>)AccessTools.Field(typeof(InGameNPC), "NPCStatsDict").GetValue(worker);
+                dict.Add(statModel, stat);
+                gm.AllNPCs.Add(worker);
+            }
+            Check(NPCStatInstantModifierPreview.Targets(false, model, null).Contains(npc)
+                && NPCStatInstantModifierPreview.Targets(false, model, null).Contains(other), "explicit NPC stat target includes all matching instances");
+            Check(NPCStatInstantModifierPreview.Targets(true, null, npc).SequenceEqual(new[] { npc }), "associated NPC target is isolated from other instances");
+            var modifier = new NPCStatInstantModifier { TargetStat = statModel, UseAssociatedAgent = true, ValueChange = Vector2.one * -7 };
+            Check(NPCStatInstantModifierPreview.Format(new[] { modifier }, npc).Contains("7"), "NPC stat change shown for actual target");
+            modifier.ValueChange = Vector2.zero;
+            Check(NPCStatInstantModifierPreview.Format(new[] { modifier }, npc) == "", "zero NPC stat change hidden");
+            Check(NPCStatInstantModifierPreview.Format(new[] { modifier }, null) == "", "unresolved associated NPC has no invented effect");
+            duty.DutyName = new LocalizedString { DefaultText = "NPC preview duty", LocalizationKey = "IGNOREKEY" };
+            step.AffectType = AffectItemsDutyAction.AffectTypes.PerformActionOnCard;
+            duty.ActionSequence = new NPCDutyAction[] { step };
+            var reference = new NPCDutyRef { TargetDuty = duty };
+            // Pick a non-always-active mode without depending on its serialization name.
+            reference.ActivatingMode = (NPCDutyActiveSettings)Enum.GetValues(typeof(NPCDutyActiveSettings)).Cast<NPCDutyActiveSettings>().First(m => m != NPCDutyActiveSettings.AlwaysActive);
+            npc.AllDuties.Add(reference);
+            AccessTools.Field(typeof(InGameNPC), "DutiesDict").SetValue(npc, new Dictionary<NPCDuty, NPCDutyRef> { [duty] = reference });
+            var dutyChange = new NPCSetDutyActive { Duty = duty, UseAssociatedAgent = true, SetActive = true };
+            Check(NPCSetDutyActivePreview.Format(new[] { dutyChange }, npc).Contains("NPC preview duty"), "NPC duty enable effect shown");
+            reference.SetActive(true);
+            Check(NPCSetDutyActivePreview.Format(new[] { dutyChange }, npc) == "", "already active duty effect hidden");
+            Check(NPCDutySelectionInfoPreview.Format(default) == "", "uninitialized duty report is not a failure");
+            var report = new NPCDutySelectionInfo(npc, duty) { AtHomeConditionValid = false };
+            reference.WeightInfo = report;
+            Check(NPCDutySelectionInfoPreview.Format(report) == NPCStatInstantModifierPreview.Text("NeedsHome", "must be at home"), "only recorded duty failures are displayed");
+            npc.CurrentDuty = new SelectedNPCDuty(duty);
+            // Select a step without running StartDutyAction or its item-selection side effects.
+            object boxed = npc.CurrentDuty;
+            AccessTools.Field(typeof(SelectedNPCDuty), "CurrentActionIndex").SetValue(boxed, 0);
+            npc.CurrentDuty = (SelectedNPCDuty)boxed;
+            npc.CurrentDuty.ActionStarted = true;
+            npc.CurrentDuty.StartWaiting(8);
+            npc.CurrentDuty.UpdateWaiting();
+            var action = new DismantleCardAction { ActionName = new LocalizedString { DefaultText = "Selected NPC test work", LocalizationKey = "IGNOREKEY" },
+                NPCStatModifications = new[] { new NPCStatInstantModifier { TargetStat = statModel, UseAssociatedAgent = true, ValueChange = Vector2.one * -3 } } };
+            npc.CurrentDuty.ActionCards.Add(workCard);
+            npc.CurrentDuty.DismantleActions.Add(action);
+            string before = JsonUtility.ToJson(npc.CurrentDuty), originalAction = JsonUtility.ToJson(action), random = RandomState();
+            string text = SelectedNPCDutyPreview.Format(npc);
+            Check(text.Contains("Selected NPC test work") && text.Contains("7") && text.Contains("3"), "selected NPC work displays step countdown and target effects");
+            Check(before == JsonUtility.ToJson(npc.CurrentDuty) && originalAction == JsonUtility.ToJson(action) && random == RandomState(), "NPC work preview preserves duty action caches and RNG");
+            Check(!text.Contains("\n\n"), "NPC work preview has no blank lines");
+            duty.DoNotShowToPlayer = true;
+            Check(SelectedNPCDutyPreview.Format(npc) == "", "hidden NPC duty details remain hidden");
+            duty.DoNotShowToPlayer = false;
+            var playerStat = Resources.FindObjectsOfTypeAll<GameStat>().FirstOrDefault(s => GameStatsToNPCStats.GetCorrespondingStat(s, model));
+            Check(playerStat, "loaded allied NPC exposes player-to-NPC stat mapping");
+            action.StatModifications = new[] { new StatModifier { Stat = playerStat, ValueModifier = Vector2.one * 2 } };
+            var player = CardActionPreview.PreviewAction(action, workCard, null);
+            var workerPreview = CardActionPreview.PreviewAction(action, workCard, null, npc);
+            Check(player.AllStatModifiers.Any(m => m.Stat == playerStat) && !workerPreview.AllStatModifiers.Any(m => m.Stat == playerStat)
+                && workerPreview.AllNPCStatModifiers.Any(m => m.TargetStat == GameStatsToNPCStats.GetCorrespondingStat(playerStat, model)), "worker preview maps stats to NPC while player button stays player-specific");
+        }
+        finally
+        {
+            gm.AllNPCs.Remove(npc); gm.AllNPCs.Remove(other);
+            UnityEngine.Object.Destroy(root); UnityEngine.Object.Destroy(otherObject);
+            UnityEngine.Object.Destroy(duty); UnityEngine.Object.Destroy(step);
+        }
     }
 }

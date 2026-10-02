@@ -550,11 +550,8 @@ public static void GetWoundsForSeverity_il2cpp(this PlayerWounds playerWounds, W
             texts.Add(temporaryText);
         }
 
-        if (action.AllNPCStatModifiers != null)
-            foreach (var modifier in action.AllNPCStatModifiers)
-                if (modifier.TargetStat)
-                    texts.Add(FormatBasicEntry(FormatMinMaxValue(modifier.ValueChange),
-                        $"{(modifier.UseAssociatedAgent ? LcStr("CSFFCardDetailTooltip.AssociatedNPC", "Associated NPC") : modifier.TargetAgent ? modifier.TargetAgent.AgentName.ToString() : "NPC")}: {modifier.TargetStat.GameName}", indent: indent + 2));
+        texts.Add(NPCStatInstantModifierPreview.Format(action.AllNPCStatModifiers, fromCard ? fromCard.NPCModel : null, indent + 2));
+        texts.Add(NPCSetDutyActivePreview.Format(action.AllNPCSetDuties, fromCard ? fromCard.NPCModel : null, indent + 2));
 
         CardStateChange stateChange = CardStateChangePreview.PreviewStateChange(action.ReceivingCardChanges, fromCard,
             givenCard, action.DurabilitiesLiquidScale, !action.InstantDurabilityModifications);
